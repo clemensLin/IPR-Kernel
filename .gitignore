@@ -1,0 +1,27 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated processed research data
+# Regenerate with Data/Data_Processing.ipynb
+Data/Processed/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
