@@ -43,3 +43,7 @@ The notebooks should be opened from the repository root so relative paths resolv
 The main reusable code is in `scripts/`.
 
 The analysis notebooks in `Paper Analysis/` demonstrate the full workflows and figure generation.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.
