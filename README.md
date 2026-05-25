@@ -5,12 +5,12 @@ Research code and notebooks for analyzing inverse participation ratio (IPR) base
 ## Repository Layout
 
 - `scripts/`: reusable Python helpers for data loading, plotting, Gram-matrix construction, finite-shot noise, and SVM experiments.
-- `Paper Analysis/`: notebooks and generated figures/tables used for paper-style analysis.
-- `Data/`: local raw datasets and generated processed datasets. `Data/Processed/` is intentionally ignored by Git because it is generated and large.
+- `Paper Analysis/`: notebooks and generated figures/tables used in the paper.
+- `Data/`: local raw datasets and processed datasets.
 
 ## Data
 
-The local `Data/` directory contains raw and processed CSV/NPY files for TFIM, thermal TFIM, and Heisenberg analyses. Processed outputs are generated files and are not suitable for normal Git commits.
+The local `Data/` directory contains raw and processed CSV/NPY files for TFIM, thermal TFIM, and Heisenberg analyses. Processed outputs are generated files and due to their size not included in the repo.
 
 Run `Data/Data_Processing.ipynb` to regenerate the processed datasets. The notebook writes its outputs under `Data/Processed/`.
 
