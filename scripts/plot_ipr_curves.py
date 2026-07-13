@@ -42,10 +42,10 @@ def set_ipr_plot_style() -> None:
     plt.rcParams.update({
         "font.family": "STIXGeneral",
         "mathtext.fontset": "stix",
-        "axes.labelsize": 12,
+        "axes.labelsize": 15,
         "xtick.labelsize": 10,
         "ytick.labelsize": 10,
-        "legend.fontsize": 10,
+        "legend.fontsize": 12,
     })
 
 

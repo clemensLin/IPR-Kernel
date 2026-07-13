@@ -49,13 +49,13 @@ def _set_normalized_cbar_ticks(cbar, normalized: bool):
 
 def _axis_labels(dataset: str, normalized: bool = False) -> tuple[str, str, str]:
     """Return axis labels and the raw/normalized IPR-kernel colorbar label."""
-    kernel = r"\tilde{k}" if normalized else "k"
+    kernel = r"\tilde{K}" if normalized else "K"
     if dataset == "heisenberg":
         return r"$\Delta_a$", r"$\Delta_b$", rf"${kernel}_{{\mathrm{{IPR}}}}(\Delta_a,\Delta_b)$"
     return r"$h_a$", r"$h_b$", rf"${kernel}_{{\mathrm{{IPR}}}}(h_a,h_b)$"
 
 
-def _annotate_gram_panel(ax, label: str, fontsize: int = 11) -> None:
+def _annotate_gram_panel(ax, label: str, fontsize: int = 12) -> None:
     """Place the panel identifier inside the Gram matrix."""
     ax.text(
         0.04,
@@ -156,8 +156,8 @@ def plot_ipr_gram_matrix(
     )
 
     xlabel, ylabel, cbar_label = _axis_labels(dataset, normalized=bool(normalize))
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel, fontsize=15)
+    ax.set_ylabel(ylabel, fontsize=15)
     ax.tick_params(direction="in", which="both", top=True, right=True)
     ax.minorticks_on()
     ax.axvline(cfg["critical_point"], color="0.2", lw=1.0, ls=":")
@@ -173,7 +173,7 @@ def plot_ipr_gram_matrix(
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     _set_normalized_cbar_ticks(cbar, normalized=bool(normalize))
-    cbar.set_label(cbar_label)
+    cbar.set_label(cbar_label, fontsize=15)
     return fig, ax, gram
 
 
@@ -247,8 +247,8 @@ def plot_ipr_gram_matrices_up_to(
         ax.minorticks_on()
         ax.axvline(cfg["critical_point"], color="0.2", lw=0.8, ls=":")
         ax.axhline(cfg["critical_point"], color="0.2", lw=0.8, ls=":")
-        ax.set_xlabel(xlabel, fontsize=9)
-        ax.set_ylabel(ylabel, fontsize=9)
+        ax.set_xlabel(xlabel, fontsize=15)
+        ax.set_ylabel(ylabel, fontsize=15)
 
     for ax in axes[len(grams):]:
         ax.axis("off")
@@ -258,7 +258,7 @@ def plot_ipr_gram_matrices_up_to(
         cax = fig.add_axes([0.915, 0.22, 0.015, 0.56])
         cbar = fig.colorbar(last_im, cax=cax)
         _set_normalized_cbar_ticks(cbar, normalized=bool(normalize))
-        cbar.set_label(cbar_label)
+        cbar.set_label(cbar_label, fontsize=15)
 
     if show_title:
         norm_txt = "normalized" if normalize else "unnormalized"
@@ -387,7 +387,7 @@ def compute_thermal_gram_matrix(
 
 def _thermal_cbar_label(kind: str, normalized: bool = False) -> str:
     """Return the raw/normalized thermal-kernel colorbar label."""
-    kernel = r"\tilde{k}" if normalized else "k"
+    kernel = r"\tilde{K}" if normalized else "K"
     if kind == "ipr":
         return rf"${kernel}_{{\mathrm{{IPR}}}}(h_a,h_b)$"
     return rf"${kernel}_{{\mathrm{{HS}}}}(h_a,h_b)$"
@@ -407,8 +407,8 @@ def _plot_thermal_ipr_gram_on_axis(ax, gram, norm=None):
     )
     ax.axvline(1.0, color="0.2", lw=0.9, ls=":")
     ax.axhline(1.0, color="0.2", lw=0.9, ls=":")
-    ax.set_xlabel(r"$h_a$")
-    ax.set_ylabel(r"$h_b$")
+    ax.set_xlabel(r"$h_a$", fontsize=15)
+    ax.set_ylabel(r"$h_b$", fontsize=15)
     ax.tick_params(direction="in", which="both", top=True, right=True)
     ax.minorticks_on()
     return im
@@ -458,7 +458,7 @@ def plot_thermal_ipr_gram_matrix(
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     _set_normalized_cbar_ticks(cbar, normalized=bool(normalize))
-    cbar.set_label(_thermal_cbar_label("ipr", normalized=bool(normalize)))
+    cbar.set_label(_thermal_cbar_label("ipr", normalized=bool(normalize)), fontsize=15)
     return fig, ax, gram
 
 
@@ -505,7 +505,7 @@ def plot_thermal_gram_matrix(
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     _set_normalized_cbar_ticks(cbar, normalized=normalized_for_colorbar)
-    cbar.set_label(_thermal_cbar_label(kind, normalized=normalized_for_colorbar))
+    cbar.set_label(_thermal_cbar_label(kind, normalized=normalized_for_colorbar), fontsize=15)
     return fig, ax, gram
 
 
@@ -563,7 +563,7 @@ def plot_thermal_ipr_gram_matrices(
         cax = fig.add_axes([0.915, 0.22, 0.015, 0.56])
         cbar = fig.colorbar(last_im, cax=cax)
         _set_normalized_cbar_ticks(cbar, normalized=bool(normalize))
-        cbar.set_label(_thermal_cbar_label("ipr", normalized=bool(normalize)))
+        cbar.set_label(_thermal_cbar_label("ipr", normalized=bool(normalize)), fontsize=15)
 
     if show_title:
         norm_txt = "normalized" if grams[0]["normalize"] else "unnormalized"
@@ -632,7 +632,7 @@ def plot_thermal_gram_matrices(
         cbar = fig.colorbar(last_im, cax=cax)
         normalized_for_colorbar = kind == "hs" or bool(grams[0]["normalize"])
         _set_normalized_cbar_ticks(cbar, normalized=normalized_for_colorbar)
-        cbar.set_label(_thermal_cbar_label(kind, normalized=normalized_for_colorbar))
+        cbar.set_label(_thermal_cbar_label(kind, normalized=normalized_for_colorbar), fontsize=15)
 
     if show_title:
         norm_txt = "normalized" if kind == "hs" or grams[0]["normalize"] else "as stored"
