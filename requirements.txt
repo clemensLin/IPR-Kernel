@@ -1,3 +1,4 @@
+# For notebooks
 numpy
 pandas
 matplotlib
@@ -5,3 +6,9 @@ scipy
 scikit-learn
 jupyter
 ipykernel
+
+# For data generation
+netket
+jax
+seaborn
+tqdm
