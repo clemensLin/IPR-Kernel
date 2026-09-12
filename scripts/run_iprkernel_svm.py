@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.svm import SVC
 
@@ -581,22 +582,16 @@ def run_noisy_iprkernel_svm_ns_sweep(
                 f"({len(noise_seeds)} noise seeds, {n_splits} splits)"
             )
 
-        leg_left = ax.legend(
-            global_handles,
-            global_labels,
-            frameon=False,
-            loc="lower left",
-            bbox_to_anchor=(0.01, 0.01),
-            title="Global",
-        )
-        ax.add_artist(leg_left)
+        header_global = Line2D([], [], linestyle="None", label="Global")
+        header_local = Line2D([], [], linestyle="None", label="Local")
         ax.legend(
-            local_handles,
-            local_labels,
+            [header_global, *global_handles, header_local, *local_handles],
+            ["Global", *global_labels, "Local", *local_labels],
             frameon=False,
             loc="lower left",
-            bbox_to_anchor=(0.24, 0.01),
-            title="Local",
+            ncol=2,
+            handlelength=1.8,
+            columnspacing=1.6,
         )
 
     rows = []

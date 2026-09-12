@@ -40,12 +40,14 @@ def _curve_style(dataset: str, curve_name: str) -> dict:
 def set_ipr_plot_style() -> None:
     """Apply the shared publication-style matplotlib settings."""
     plt.rcParams.update({
-        "font.family": "STIXGeneral",
-        "mathtext.fontset": "stix",
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        "mathtext.fontset": "dejavusans",
+        "font.size": 15,
         "axes.labelsize": 15,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 12,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
+        "legend.fontsize": 14,
     })
 
 

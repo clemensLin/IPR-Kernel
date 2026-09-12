@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap, Normalize
+from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 from data_config import (
     DATASETS,
@@ -55,7 +56,7 @@ def _axis_labels(dataset: str, normalized: bool = False) -> tuple[str, str, str]
     return r"$h_a$", r"$h_b$", rf"${kernel}_{{\mathrm{{IPR}}}}(h_a,h_b)$"
 
 
-def _annotate_gram_panel(ax, label: str, fontsize: int = 12) -> None:
+def _annotate_gram_panel(ax, label: str, fontsize: int = 14) -> None:
     """Place the panel identifier inside the Gram matrix."""
     ax.text(
         0.04,
@@ -67,6 +68,28 @@ def _annotate_gram_panel(ax, label: str, fontsize: int = 12) -> None:
         fontsize=fontsize,
         bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.72, "pad": 1.5},
     )
+
+
+def _set_thermal_h_ticks(ax) -> None:
+    """Use fixed major h ticks for thermal Gram matrix panels."""
+    h_ticks = np.arange(0.0, 4.1, 1.0)
+    ax.xaxis.set_major_locator(FixedLocator(h_ticks))
+    ax.yaxis.set_major_locator(FixedLocator(h_ticks))
+    ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
+    ax.yaxis.set_major_formatter(FormatStrFormatter("%g"))
+
+
+def _set_integer_parameter_ticks(ax, values) -> None:
+    """Use integer major ticks across the plotted parameter range."""
+    values = np.asarray(values, dtype=float)
+    tick_min = np.ceil(np.nanmin(values))
+    tick_max = np.floor(np.nanmax(values))
+    if tick_max >= tick_min:
+        ticks = np.arange(tick_min, tick_max + 1.0, 1.0)
+        ax.xaxis.set_major_locator(FixedLocator(ticks))
+        ax.yaxis.set_major_locator(FixedLocator(ticks))
+        ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
+        ax.yaxis.set_major_formatter(FormatStrFormatter("%g"))
 
 
 def compute_ipr_gram_matrix(
@@ -160,6 +183,7 @@ def plot_ipr_gram_matrix(
     ax.set_ylabel(ylabel, fontsize=15)
     ax.tick_params(direction="in", which="both", top=True, right=True)
     ax.minorticks_on()
+    _set_integer_parameter_ticks(ax, x)
     ax.axvline(cfg["critical_point"], color="0.2", lw=1.0, ls=":")
     ax.axhline(cfg["critical_point"], color="0.2", lw=1.0, ls=":")
 
@@ -243,17 +267,27 @@ def plot_ipr_gram_matrices_up_to(
         )
         last_im = im
         _annotate_gram_panel(ax, rf"$L={gram['L']}$")
-        ax.tick_params(direction="in", which="both", top=True, right=True, labelsize=8)
+        ax.tick_params(direction="in", which="both", top=True, right=True, labelsize=12)
         ax.minorticks_on()
+        _set_integer_parameter_ticks(ax, x)
         ax.axvline(cfg["critical_point"], color="0.2", lw=0.8, ls=":")
         ax.axhline(cfg["critical_point"], color="0.2", lw=0.8, ls=":")
-        ax.set_xlabel(xlabel, fontsize=15)
-        ax.set_ylabel(ylabel, fontsize=15)
+        if nrows == 3 and ncols == 3:
+            ax.set_xlabel("")
+            ax.set_ylabel("")
+        else:
+            ax.set_xlabel(xlabel, fontsize=15)
+            ax.set_ylabel(ylabel, fontsize=15)
 
     for ax in axes[len(grams):]:
         ax.axis("off")
 
-    fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
+    if nrows == 3 and ncols == 3:
+        fig.tight_layout(rect=[0.05, 0.05, 0.90, 1.0])
+        fig.supxlabel(xlabel, fontsize=15)
+        fig.supylabel(ylabel, fontsize=15)
+    else:
+        fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
     if last_im is not None:
         cax = fig.add_axes([0.915, 0.22, 0.015, 0.56])
         cbar = fig.colorbar(last_im, cax=cax)
@@ -411,6 +445,7 @@ def _plot_thermal_ipr_gram_on_axis(ax, gram, norm=None):
     ax.set_ylabel(r"$h_b$", fontsize=15)
     ax.tick_params(direction="in", which="both", top=True, right=True)
     ax.minorticks_on()
+    _set_thermal_h_ticks(ax)
     return im
 
 
@@ -554,11 +589,19 @@ def plot_thermal_ipr_gram_matrices(
     for ax, gram in zip(axes, grams):
         last_im = _plot_thermal_ipr_gram_on_axis(ax, gram, norm=norm)
         _annotate_gram_panel(ax, rf"$\beta={gram['beta']:g}$")
+        if nrows == 3 and ncols == 3:
+            ax.set_xlabel("")
+            ax.set_ylabel("")
 
     for ax in axes[len(grams):]:
         ax.axis("off")
 
-    fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
+    if nrows == 3 and ncols == 3:
+        fig.tight_layout(rect=[0.05, 0.05, 0.90, 1.0])
+        fig.supxlabel(r"$h_a$", fontsize=15)
+        fig.supylabel(r"$h_b$", fontsize=15)
+    else:
+        fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
     if last_im is not None:
         cax = fig.add_axes([0.915, 0.22, 0.015, 0.56])
         cbar = fig.colorbar(last_im, cax=cax)
@@ -622,11 +665,19 @@ def plot_thermal_gram_matrices(
     for ax, gram in zip(axes, grams):
         last_im = _plot_thermal_gram_on_axis(ax, gram, norm=norm)
         _annotate_gram_panel(ax, rf"$\beta={gram['beta']:g}$")
+        if nrows == 3 and ncols == 3:
+            ax.set_xlabel("")
+            ax.set_ylabel("")
 
     for ax in axes[len(grams):]:
         ax.axis("off")
 
-    fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
+    if nrows == 3 and ncols == 3:
+        fig.tight_layout(rect=[0.05, 0.05, 0.90, 1.0])
+        fig.supxlabel(r"$h_a$", fontsize=15)
+        fig.supylabel(r"$h_b$", fontsize=15)
+    else:
+        fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
     if last_im is not None:
         cax = fig.add_axes([0.915, 0.22, 0.015, 0.56])
         cbar = fig.colorbar(last_im, cax=cax)
