@@ -52,8 +52,8 @@ def _axis_labels(dataset: str, normalized: bool = False) -> tuple[str, str, str]
     """Return axis labels and the raw/normalized IPR-kernel colorbar label."""
     kernel = r"\tilde{K}" if normalized else "K"
     if dataset == "heisenberg":
-        return r"$\Delta_a$", r"$\Delta_b$", rf"${kernel}_{{\mathrm{{IPR}}}}(\Delta_a,\Delta_b)$"
-    return r"$h_a$", r"$h_b$", rf"${kernel}_{{\mathrm{{IPR}}}}(h_a,h_b)$"
+        return r"$\Delta_i$", r"$\Delta_j$", rf"${kernel}_{{\mathrm{{IPR}}}}(\Delta_i,\Delta_j)$"
+    return r"$h_i$", r"$h_j$", rf"${kernel}_{{\mathrm{{IPR}}}}(h_i,h_j)$"
 
 
 def _annotate_gram_panel(ax, label: str, fontsize: int = 14) -> None:
@@ -423,8 +423,8 @@ def _thermal_cbar_label(kind: str, normalized: bool = False) -> str:
     """Return the raw/normalized thermal-kernel colorbar label."""
     kernel = r"\tilde{K}" if normalized else "K"
     if kind == "ipr":
-        return rf"${kernel}_{{\mathrm{{IPR}}}}(h_a,h_b)$"
-    return rf"${kernel}_{{\mathrm{{HS}}}}(h_a,h_b)$"
+        return rf"${kernel}_{{\mathrm{{IPR}}}}(h_i,h_j)$"
+    return rf"${kernel}_{{\mathrm{{HS}}}}(h_i,h_j)$"
 
 
 def _plot_thermal_ipr_gram_on_axis(ax, gram, norm=None):
@@ -441,8 +441,8 @@ def _plot_thermal_ipr_gram_on_axis(ax, gram, norm=None):
     )
     ax.axvline(1.0, color="0.2", lw=0.9, ls=":")
     ax.axhline(1.0, color="0.2", lw=0.9, ls=":")
-    ax.set_xlabel(r"$h_a$", fontsize=15)
-    ax.set_ylabel(r"$h_b$", fontsize=15)
+    ax.set_xlabel(r"$h_i$", fontsize=15)
+    ax.set_ylabel(r"$h_j$", fontsize=15)
     ax.tick_params(direction="in", which="both", top=True, right=True)
     ax.minorticks_on()
     _set_thermal_h_ticks(ax)
@@ -598,8 +598,8 @@ def plot_thermal_ipr_gram_matrices(
 
     if nrows == 3 and ncols == 3:
         fig.tight_layout(rect=[0.05, 0.05, 0.90, 1.0])
-        fig.supxlabel(r"$h_a$", fontsize=15)
-        fig.supylabel(r"$h_b$", fontsize=15)
+        fig.supxlabel(r"$h_i$", fontsize=15)
+        fig.supylabel(r"$h_j$", fontsize=15)
     else:
         fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
     if last_im is not None:
@@ -674,8 +674,8 @@ def plot_thermal_gram_matrices(
 
     if nrows == 3 and ncols == 3:
         fig.tight_layout(rect=[0.05, 0.05, 0.90, 1.0])
-        fig.supxlabel(r"$h_a$", fontsize=15)
-        fig.supylabel(r"$h_b$", fontsize=15)
+        fig.supxlabel(r"$h_i$", fontsize=15)
+        fig.supylabel(r"$h_j$", fontsize=15)
     else:
         fig.tight_layout(rect=[0.0, 0.0, 0.90, 1.0])
     if last_im is not None:

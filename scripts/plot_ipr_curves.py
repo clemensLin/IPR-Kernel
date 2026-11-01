@@ -17,16 +17,16 @@ from data_config import (
 
 
 CURVE_STYLES = {
-    "IPR X": {"color": "#1b9e77", "label": r"$\mathrm{IPR}_X$", "linestyle": "-"},
-    "IPR Z": {"color": "#d95f02", "label": r"$\mathrm{IPR}_Z$", "linestyle": "--"},
-    "IPR XY": {"color": "#1b9e77", "label": r"$\mathrm{IPR}_{XY}$", "linestyle": "-"},
+    "IPR X": {"color": "#1b9e77", "label": r"$I^{(X)}$", "linestyle": "-"},
+    "IPR Z": {"color": "#d95f02", "label": r"$I^{(Z)}$", "linestyle": "--"},
+    "IPR XY": {"color": "#1b9e77", "label": r"$I^{(XY)}$", "linestyle": "-"},
 }
 
 
 HEISENBERG_CURVE_STYLES = {
-    "IPR XY": {"color": "#1b9e77", "label": r"$\mathrm{IPR}_{XY}$", "linestyle": "-"},
-    "IPR Z": {"color": "#d95f02", "label": r"$\mathrm{IPR}_{Z}$", "linestyle": "--"},
-    "IPR X": {"color": "#1b9e77", "label": r"$\mathrm{IPR}_{X}$ (dotted)", "linestyle": ":"},
+    "IPR XY": {"color": "#1b9e77", "label": r"$I^{(XY)}$", "linestyle": "-"},
+    "IPR Z": {"color": "#d95f02", "label": r"$I^{(Z)}$", "linestyle": "--"},
+    "IPR X": {"color": "#1b9e77", "label": r"$I^{(X)}$ (dotted)", "linestyle": ":"},
 }
 
 
@@ -299,8 +299,8 @@ def plot_all_n_log_overlay(
         handles.append(handle)
 
     handles.extend([
-        Line2D([0], [0], color="0.2", lw=2.0, alpha=0.8, label="smaller L"),
-        Line2D([0], [0], color="0.2", lw=2.0, alpha=0.2, label="larger L (dimmer)"),
+        Line2D([0], [0], color="0.2", lw=2.0, alpha=0.8, label=r"smaller $L$"),
+        Line2D([0], [0], color="0.2", lw=2.0, alpha=0.2, label=r"larger $L$ (fainter)"),
     ])
     if crossings:
         handles.append(
@@ -312,7 +312,7 @@ def plot_all_n_log_overlay(
                 markerfacecolor="white",
                 markeredgecolor="black",
                 markersize=6,
-                label="crossing (per L)",
+                label=r"crossing (per $L$)",
             )
         )
 
