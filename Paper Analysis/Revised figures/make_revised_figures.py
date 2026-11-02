@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pickle
 import sys
 from pathlib import Path
@@ -27,6 +28,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import font_manager
 from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm
 from matplotlib.lines import Line2D
 from sklearn.preprocessing import KernelCenterer
@@ -64,12 +66,32 @@ L_MARKERS = {20: "o", 50: "s", 100: "^"}
 DELTA_S_CMAP = LinearSegmentedColormap.from_list("green_white_orange", [GREEN, "#ffffff", ORANGE], N=512)
 
 
+# Arial is not installed system-wide here; these copies ship with ROOT. Set
+# IPR_FONT_DIR to another folder holding arial*.ttf if this path does not exist.
+ARIAL_DIRS = [os.environ.get("IPR_FONT_DIR", ""), "/opt/software/root/6.36.00/fonts"]
+
+
+def register_arial() -> bool:
+    """Make Arial available to matplotlib without installing it; True if found."""
+    for folder in filter(None, ARIAL_DIRS):
+        files = sorted(Path(folder).glob("arial*.ttf"))
+        if files:
+            for f in files:
+                font_manager.fontManager.addfont(str(f))
+            return True
+    return False
+
+
 def apply_style() -> None:
-    """Shared rcParams for every revised figure."""
+    """Shared rcParams for every revised figure, matching the original paper plots (Arial text, DejaVu math)."""
+    if not register_arial():
+        print("warning: Arial not found, falling back to Liberation Sans")
     plt.rcParams.update({
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Liberation Sans", "DejaVu Sans"],
         "mathtext.fontset": "dejavusans",
+        # This Arial build lacks U+2212; use the ASCII hyphen for negative ticks.
+        "axes.unicode_minus": False,
         "font.size": 8,
         "axes.labelsize": 8,
         "axes.titlesize": 8,
@@ -262,14 +284,15 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     colorbar(fig, im, 6.12, 2.45, 1.7, r"$\tilde K_{\mathrm{IPR}}(h_i,h_j)$")
 
     shots = ["200", "500", "1000", "2000", "5000", "10000"]
-    shades = plt.get_cmap("Greens")(np.linspace(0.35, 0.9, len(shots)))
+    # Same green as the IPR curves in (a); opacity grows with the shot budget.
+    alphas = np.linspace(0.25, 1.0, len(shots))
     for ax, col, title in ((ax_c, 1, "global"), (ax_d, 3, "local")):
-        for ns, color in zip(shots, shades):
+        for ns, alpha in zip(shots, alphas):
             arr = np.asarray(svm_tables[ns])
-            ax.errorbar(arr[:, 0], arr[:, col], yerr=arr[:, col + 1], color=color, marker="o", ms=2.2,
-                        lw=0.9, elinewidth=0.5, capsize=1.2, label=rf"$N_s={int(ns)}$")
+            ax.errorbar(arr[:, 0], arr[:, col], yerr=arr[:, col + 1], color=GREEN, alpha=alpha, marker="o",
+                        ms=2.2, lw=0.9, elinewidth=0.5, capsize=1.2, label=rf"$N_s={int(ns)}$")
         arr = np.asarray(svm_tables["exact"])
-        ax.errorbar(arr[:, 0], arr[:, col], yerr=arr[:, col + 1], color="black", marker="s", ms=2.2, lw=0.9,
+        ax.errorbar(arr[:, 0], arr[:, col], yerr=arr[:, col + 1], color=ORANGE, marker="s", ms=2.2, lw=0.9,
                     elinewidth=0.5, capsize=1.2, label="exact IPRs")
         ax.axhline(0.5, color="0.35", lw=0.6, ls=":")
         ax.set_xlabel(r"$L$")
@@ -423,6 +446,121 @@ def fig_heisenberg_xz(out: Path) -> None:
     panel_label(ax_a, "(a)")
     panel_label(ax_b, "(b)")
     save(fig, out, "heisenberg_ipr_xz")
+
+
+def fig_heisenberg_xz_kernel(out: Path, svm_tables: dict) -> None:
+    """X/Z-kernel Gram matrices and balanced accuracy of the X/Z and XY/Z kernels."""
+    fig = new_figure(PAGE_W, 2.0)
+    size, gap, x0, b0, h = 1.0, 0.14, 0.45, 0.38, 1.52
+    b = b0 + (h - size) / 2
+    axes = [add_axes(fig, x0 + k * (size + gap), b, size, size) for k in range(3)]
+    im = None
+    for ax, L in zip(axes, (8, 16, 24)):
+        g = compute_ipr_gram_matrix("heisenberg", L, basis=("IPR X", "IPR Z"), normalize=True)
+        im = gram_panel(ax, g["K"], g["x"])
+        inset_text(ax, rf"$L={L}$")
+        ax.set_xlabel(r"$\Delta_i$")
+        ax.set_xticks([0, 1, 2, 3, 4, 5])
+    axes[0].set_ylabel(r"$\Delta_j$")
+    for ax in axes[1:]:
+        ax.set_yticklabels([])
+    cb_left = x0 + 3 * size + 2 * gap + 0.07
+    colorbar(fig, im, cb_left, b, size, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
+
+    ax_b = add_axes(fig, 4.75, b0, 2.2, h)
+    kernels = (("X_Z", r"$X$, $Z$", ORANGE), ("XY_Z", r"$XY$, $Z$", GREEN))
+    for key, name, color in kernels:
+        arr = np.asarray(svm_tables[key])
+        ax_b.errorbar(arr[:, 0], arr[:, 1], yerr=arr[:, 2], color=color, marker="o", ms=2.4, lw=0.9,
+                      elinewidth=0.5, capsize=1.2)
+        line = ax_b.errorbar(arr[:, 0], arr[:, 3], yerr=arr[:, 4], color=color, marker="s", ms=2.4, lw=0.9,
+                             mfc="white", elinewidth=0.5, capsize=1.2)
+        line[0].set_dashes((4, 2))
+    ax_b.axhline(0.5, color="0.35", lw=0.6, ls=":")
+    ax_b.set_xlabel(r"$L$")
+    ax_b.set_ylabel("Balanced accuracy")
+    ax_b.set_xticks(np.arange(6, 25, 2))
+    ax_b.set_xlim(5, 25)
+    ax_b.set_ylim(0.45, 1.03)
+    line_axes(ax_b)
+    dashed = Line2D([0], [0], color="0.2", lw=0.9, marker="s", ms=2.4, mfc="white", label="local")
+    dashed.set_dashes((4, 2))
+    handles = [Line2D([0], [0], color=c, lw=1.2, label=n) for _, n, c in kernels]
+    handles += [Line2D([0], [0], color="0.2", lw=0.9, marker="o", ms=2.4, label="global"), dashed]
+    ax_b.legend(handles=handles, loc="center right", ncol=2, frameon=True, facecolor="white", edgecolor="none",
+                framealpha=0.85)
+    panel_label(axes[0], "(a)")
+    panel_label(ax_b, "(b)")
+    save(fig, out, "heisenberg_xz_kernel")
+
+
+def bethe_hc1(delta: np.ndarray, kmax: int = 4000) -> np.ndarray:
+    """AFM-XY boundary for Delta > 1 in the Pauli-operator convention: 2 sinh(eta) sum_k (-1)^k / cosh(k eta)."""
+    out = np.full_like(delta, np.nan, dtype=float)
+    for i, d in enumerate(delta):
+        if d > 1.0:
+            eta = np.arccosh(d)
+            # Terms decay as exp(-|k| eta); stop once they are below double precision.
+            k = np.arange(-min(kmax, int(40 / eta) + 1), min(kmax, int(40 / eta) + 1) + 1)
+            out[i] = 2.0 * np.sinh(eta) * np.sum((-1.0) ** k / np.cosh(k * eta))
+    return out
+
+
+def fig_xxz_field(out: Path) -> None:
+    """Field-XXZ phase diagram at L=14 from log10(I_Z / I_XY), with the IPR and Bethe-ansatz boundaries."""
+    df = pd.read_csv(REPO_ROOT / "Data" / "Raw" / "Data Heisenberg" / "L=14_with_field" / "ipr_field_sweep_L=14.csv")
+    deltas = np.round(np.sort(df["delta"].unique()), 6)
+    fields = np.round(np.sort(df["h"].unique()), 6)
+    grid = df.assign(r=np.log10(df["ipr_z"] / df["ipr_xy"])).pivot(index="h", columns="delta", values="r")
+    ratio = grid.to_numpy()
+    step = deltas[1] - deltas[0]
+    edges_d = np.append(deltas - step / 2, deltas[-1] + step / 2)
+    edges_h = np.append(fields - step / 2, fields[-1] + step / 2)
+
+    # Same colour scale as the original figure: cream -> orange -> green, switching just below zero.
+    mid = 0.5 * np.array(matplotlib.colors.to_rgb(ORANGE)) + 0.5 * np.array(matplotlib.colors.to_rgb(GREEN))
+    t = 0.67
+    cmap = LinearSegmentedColormap.from_list("xxz_field", [
+        (0.0, "#FFF2E8"), (0.6 * t, "#F4A261"), (0.8 * t, ORANGE), (t, matplotlib.colors.to_hex(mid)),
+        (t + 0.3 * (1 - t), GREEN), (1.0, GREEN)], N=512)
+
+    fig = new_figure(COL_W, 2.75)
+    ax = add_axes(fig, 0.42, 0.38, 2.3, 2.3)
+    im = ax.pcolormesh(edges_d, edges_h, ratio, cmap=cmap, vmin=np.nanmin(ratio), vmax=np.nanmax(ratio),
+                       shading="flat", rasterized=True)
+
+    # IPR boundary: edges of the cells where the XY-basis IPR exceeds the Z-basis IPR.
+    xy_local = (ratio < -1e-4).astype(float)
+    fine = 20
+    mask = np.kron(xy_local, np.ones((fine, fine)))
+    xs = np.linspace(edges_d[0], edges_d[-1], mask.shape[1] + 1)
+    ys = np.linspace(edges_h[0], edges_h[-1], mask.shape[0] + 1)
+    ax.contour(0.5 * (xs[1:] + xs[:-1]), 0.5 * (ys[1:] + ys[:-1]), mask, levels=[0.5], colors="#d62728",
+               linewidths=0.8)
+
+    d_sat = np.linspace(-1.0, 1.5, 200)
+    d_afm = np.linspace(1.0 + 1e-6, 5.0, 400)
+    for sign in (1, -1):
+        ax.plot(d_sat, sign * 2 * (1 + d_sat), color="black", lw=0.8, ls="--")
+        ax.plot(d_afm, sign * bethe_hc1(d_afm), color="black", lw=0.8, ls="--")
+    ax.set_xlim(edges_d[0], edges_d[-1])
+    ax.set_ylim(edges_h[0], edges_h[-1])
+    ax.set_xlabel(r"$\Delta$")
+    ax.set_ylabel(r"$h$")
+    ax.set_xticks(np.arange(-4, 5, 2))
+    ax.set_yticks(np.arange(-4, 5, 2))
+    ax.minorticks_on()
+    for x, y, text in ((-3.0, 0.0, "Ferromagnetic"), (0.0, -1.3, "Paramagnetic"), (3.6, 0.0, "Anti-\nferro-\nmagnetic")):
+        ax.text(x, y, text, ha="center", va="center", fontsize=7, fontweight="bold")
+    handles = [Line2D([0], [0], color="#d62728", lw=0.8, label="IPR crossing"),
+               Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
+    ax.legend(handles=handles, loc="upper left", frameon=True, facecolor="white", edgecolor="none", framealpha=0.85)
+    cax = add_axes(fig, 2.8, 0.38, 0.07, 2.3)
+    cb = fig.colorbar(im, cax=cax)
+    cb.ax.tick_params(length=2.0, width=0.5)
+    cb.outline.set_linewidth(0.5)
+    cb.set_label(r"$\log_{10}\,(I^{(Z)}/I^{(XY)})$", labelpad=3)
+    save(fig, out, "xxz_field_phase_diagram")
 
 
 def fig_thermal_l_sweep(out: Path) -> None:
@@ -597,6 +735,9 @@ def main() -> None:
         "fig_thermal": lambda: fig_thermal(args.out_dir, load_thermal_svm(args.thermal_svm)),
         "fig_tfim_grams": lambda: fig_tfim_grams(args.out_dir),
         "fig_heisenberg_xz": lambda: fig_heisenberg_xz(args.out_dir),
+        "fig_heisenberg_xz_kernel": lambda: fig_heisenberg_xz_kernel(
+            args.out_dir, json.load(open(HERE / "xxz_svm_tables.json"))),
+        "fig_xxz_field": lambda: fig_xxz_field(args.out_dir),
         "fig_thermal_l_sweep": lambda: fig_thermal_l_sweep(args.out_dir),
         "fig_thermal_decision": lambda: fig_thermal_decision(args.out_dir, load_thermal_svm(args.thermal_svm)),
         "fig_thermal_phase_diagram": lambda: fig_thermal_phase_diagram(args.out_dir),
