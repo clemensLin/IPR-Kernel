@@ -41,7 +41,7 @@ Notebooks should be opened from the repository root so relative paths resolve co
 | `Data Heisenberg/L=14_with_field/` | `generate_data_heisenberg_field.py` | Exact diagonalization in two bases |
 | `Data TFIM/Data TFIM {1D,2D}/` | `generate_data_tfim.jl` | DMRG with perfect sampling (ITensors) |
 | `Data TFIM Thermal/Data IPR Kernel/` | `generate_data_tfim_thermal_ipr_kernel.jl` | Trotterized MPO Gibbs states, MPO-diagonal sampling |
-| `Data TFIM Thermal/Data HS Kernel/` | `generate_data_tfim_thermal_hs_kernel.jl` | Trotterized MPO Gibbs states, exact MPO trace |
+| `Data TFIM Thermal/Data HS Kernel/` | `generate_data_tfim_thermal_hs_kernel.jl` | Trotterized MPO Gibbs states, exact MPO inner products |
 
 Every script is self-contained, writes only CSV, accepts `--sizes` and `--outdir`, and defaults to writing into the corresponding `Data/Raw/` folder. Cost grows steeply with system size, so start with one small size and verify before scaling up.
 
@@ -55,13 +55,13 @@ All datasets use `J = 1`.
 
 **TFIM ground states**, `H = -J sum_<ij> Z_i Z_j - h sum_i X_i`, periodic in every direction of extent above two. 1D `L = 3 ... 100`; 2D `L = 3 ... 10` on a torus with snake-ordered MPS. `h = 0.0, 0.2, ..., 4.0`, except 2D `8x8` and `10x10`, which use a 41-point grid and carry no `new_iprs.csv`. DMRG uses a random initial MPS with `linkdims = 10`, 10 sweeps, `maxdim = 400`, `cutoff = 1e-10`, `noise = 1e-8`; IPRs come from 10 000 perfect samples. `new_iprs.csv` holds the IPR after `Ry(theta)` applied to every site for `theta = range(0, pi/2, length=5)`, one row per angle and one column per field.
 
-**TFIM thermal**, both kernels on `L = 10, 20, ..., 100`, with `h = 0.0, 0.1, ..., 4.0`, `beta = 0.0, 0.1, ..., 6.0`, and imaginary-time step `dtau = 0.01`. The IPR kernel uses `maxdim = 400`, `cutoff = 1e-8` and 2000 Monte Carlo samples per point. The HS kernel uses `maxdim = 200`, `cutoff = 1e-12`, with kernel traces at `maxdim = 800`.
+**TFIM thermal**, both kernels on periodic chains with `L = 10, 20, ..., 100`, `h = 0.0, 0.1, ..., 4.0`, and imaginary-time step `dtau = 0.01`. The IPR kernel covers `beta = 0.0, 0.1, ..., 6.0` and uses `maxdim = 400`, `cutoff = 1e-8` and 2000 Monte Carlo samples per point. The HS kernel covers `beta = 0.0, 0.1, ..., 2.0` (every downstream analysis uses `beta <= 2`) and uses `maxdim = 200`, `cutoff = 1e-12`; the largest bond dimension reached is 136 at `L = 100`, `beta = 2`. Kernel entries are exact MPO inner products. Run it with one worker process per field, e.g. `--workers 41`.
 
 ### Conventions that are easy to misread
 
 All of the following are deliberate, and each was confirmed against independent exact diagonalization.
 
-- **The two thermal datasets use different boundary conditions.** The IPR kernel is periodic (`N` bonds); the HS kernel is open (`N-1` bonds). Checked at `L = 10`: each matches its own boundary condition and is badly wrong under the other.
+- **Both thermal datasets are periodic.** The HS kernel was originally generated with open boundaries (`N-1` bonds) and has been regenerated with periodic ones so that both kernels describe the same states. At `beta = 2` the two boundary conditions differ by up to 0.17 at `L = 10` and 0.04 at `L = 100`.
 - **The field sweep is written with Pauli operators, not spin-1/2 operators.** Its field is therefore twice the Bethe-ansatz field, `h_data = 2 h_BA`, so saturation sits at `2 (1 + Delta)` instead of `1 + Delta`. `Field_phase_diagram.ipynb` applies the factor explicitly as `BA_FIELD_SCALE`.
 - **`all_correlations.csv` stores `4 <Z_0 Z_{L/2}>`**, not the bare correlator. Consequently 374 of its 510 values lie outside `[-1, 1]`, saturating at `+/- 4` under strong Neel order. Quote it as `4 <Z_0 Z_{L/2}>`, or divide by four. The `zz_correlations` file of the field sweep is unscaled, so the same physical quantity appears in two normalizations in this repository.
 - **The HS kernel's `beta = 0` slice carries `Tr[Id^2] = 2^L`, not 1.** Every `beta > 0` slice is normalized to `Tr[rho^2] = 1`, making the kernel diagonal exactly one there. The offset at `beta = 0` is reproduced deliberately.
@@ -77,7 +77,7 @@ bash tests/run_tests.sh
 
 Monte Carlo quantities are judged against the exact standard error of the estimator rather than a fixed tolerance. Perfect sampling draws `x` from `p(x)` and averages `p(x)`, so `Var = sum_x p^3 - IPR^2`.
 
-Several checks exist specifically to catch conventions that would otherwise fail silently. The thermal IPR suite requires its data to match a periodic reference and to disagree with an open one; the HS-kernel suite requires the opposite. The zero-field suite builds the Jordan-Wigner momentum basis from scratch, and separately verifies that the Fourier operator reproduces the exact spectrum in every particle-number sector, not only at half filling.
+Several checks exist specifically to catch conventions that would otherwise fail silently. The thermal IPR and HS-kernel suites both require their data to match a periodic reference and to disagree with an open one. The zero-field suite builds the Jordan-Wigner momentum basis from scratch, and separately verifies that the Fourier operator reproduces the exact spectrum in every particle-number sector, not only at half filling.
 
 That last check matters because on a ring the Jordan-Wigner string gives the wrapping bond a factor `(-1)^N_f`, so the fermions are periodic or antiperiodic according to the parity of the fermion *number*. The half-integer momentum offset implements the antiperiodic case, and both Fourier operators now select it from `n_fermions % 2`. An earlier version of the zero-field operator derived the offset from `L` alone, which is that parity evaluated at half filling: correct where it was used, since the zero-field ground state is always at half filling, but wrong by order one in sectors of the other parity.
 
@@ -87,7 +87,7 @@ The following reproduce the committed data to machine precision:
 | --- | --- |
 | Heisenberg, zero field | `6e-15` relative, full grid at `L = 6` |
 | Heisenberg in a field | `2e-15`, representative points at `L = 14` |
-| TFIM thermal, HS kernel | `1.9e-15` over all overlapping rows at `L = 10` |
+| TFIM thermal, HS kernel | `2.2e-5` against periodic exact diagonalization over the full grid at `L = 10` (Trotter error) |
 | TFIM thermal, IPR kernel | two ulps at fixed seed |
 
 The two-basis energies of the field sweep agree to `4e-14` across representative points, and the netket Pauli-string Hamiltonian equals a from-scratch dense construction exactly.

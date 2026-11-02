@@ -6,8 +6,8 @@
 #     K_beta(h_a, h_b) = Tr[rho_a rho_b] / sqrt(Tr[rho_a^2] Tr[rho_b^2]),
 #
 # built densely from Kronecker products. The decisive check is the boundary
-# condition: this dataset is OPEN, unlike the IPR-kernel dataset, and the tests
-# confirm it matches an open reference while disagreeing with a periodic one.
+# condition: this dataset is PERIODIC, like the IPR-kernel dataset, and the tests
+# confirm it matches a periodic reference while disagreeing with an open one.
 #
 # The other convention worth pinning is the normalization: every beta > 0 slice has
 # Tr[rho^2] = 1, so the kernel diagonal is exactly one, while the beta = 0 slice is
@@ -97,27 +97,27 @@ const N_TEST = 8
 
 @testset "generate_data_tfim_thermal_hs_kernel.jl" begin
 
-    @testset "matches open thermal ED, not periodic" begin
+    @testset "matches periodic thermal ED, not open" begin
         sites = siteinds("S=1/2", N_TEST)
         for beta in (0.5, 2.0)
             states = prepare_ising_gibbs_state(sites, N_TEST, J, 1.0, [Float64(beta)])
             @test length(states) == 1
             # Unit Hilbert-Schmidt norm is the generator's normalization.
-            @test isapprox(tr(apply(states[1], states[1]; cutoff=CUTOFF)), 1.0; rtol=1e-8)
+            @test isapprox(real(inner(states[1], states[1])), 1.0; rtol=1e-8)
         end
 
         for (h_a, h_b, beta) in [(0.5, 1.0, 0.5), (1.0, 3.0, 0.5), (0.5, 1.0, 2.0)]
             sa = prepare_ising_gibbs_state(sites, N_TEST, J, Float64(h_a), [Float64(beta)])[1]
             sb = prepare_ising_gibbs_state(sites, N_TEST, J, Float64(h_b), [Float64(beta)])[1]
-            got = real(tr(apply(sa, sb; maxdim=KERNEL_MAXDIM, cutoff=KERNEL_CUTOFF)))
+            got = real(inner(sa, sb))
 
             open_ref = reference_kernel(N_TEST, Float64(h_a), Float64(h_b), Float64(beta);
                                         periodic=false)
             periodic_ref = reference_kernel(N_TEST, Float64(h_a), Float64(h_b), Float64(beta);
                                             periodic=true)
             # Trotter error at dtau = 0.01 sets the tolerance.
-            @test isapprox(got, open_ref; atol=1e-4)
-            @test abs(got - periodic_ref) > 1e-3
+            @test isapprox(got, periodic_ref; atol=1e-4)
+            @test abs(got - open_ref) > 1e-3
         end
     end
 
@@ -139,7 +139,7 @@ const N_TEST = 8
         # Against exact ED.
         for (ia, ha) in enumerate(h_vals), (ib, hb) in enumerate(h_vals)
             @test isapprox(block[ia, ib],
-                           reference_kernel(N_TEST, ha, hb, 1.0; periodic=false);
+                           reference_kernel(N_TEST, ha, hb, 1.0; periodic=true);
                            atol=1e-4)
         end
     end
@@ -153,8 +153,7 @@ const N_TEST = 8
         sites = siteinds("S=1/2", N_TEST)
         states = [prepare_ising_gibbs_state(sites, N_TEST, J, h, [0.6])[1] for h in h_vals]
         for (ia, _) in enumerate(h_vals), (ib, _) in enumerate(h_vals)
-            direct = real(tr(apply(states[ia], states[ib];
-                                   maxdim=KERNEL_MAXDIM, cutoff=KERNEL_CUTOFF)))
+            direct = real(inner(states[ia], states[ib]))
             @test isapprox(block[ia, ib], direct; atol=1e-10)
         end
     end
