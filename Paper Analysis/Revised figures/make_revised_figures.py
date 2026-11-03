@@ -702,7 +702,9 @@ def fig_analytical(out: Path) -> None:
         return 2.0 ** (-L) * z_z(b, L) * z_x(b, L) / (np.sqrt(z_z(2 * b, L)) * np.sqrt(z_x(2 * b, L)))
 
     fig = new_figure(PAGE_W, 1.9)
-    w, h, y0, x0, gap = 1.95, 1.4, 0.4, 0.55, 0.18
+    # Wide gaps so each panel letter sits clearly next to its own panel.
+    x0, gap, y0, h = 0.55, 0.35, 0.4, 1.4
+    w = (0.55 + 3 * 1.95 + 2 * 0.18 - x0 - 2 * gap) / 3
     beta = np.linspace(0.0, 1.0, 500)
     for k, L in enumerate((10, 50, 300)):
         ax = add_axes(fig, x0 + k * (w + gap), y0, w, h)
@@ -711,7 +713,7 @@ def fig_analytical(out: Path) -> None:
         ax.set_xlim(1.0, 0.0)
         ax.set_ylim(-0.03, 1.05)
         ax.set_xlabel(r"$\beta$")
-        inset_text(ax, rf"$L={L}$", "lower left")
+        inset_text(ax, rf"$L={L}$", "upper left")
         panel_label(ax, f"({'abc'[k]})")
         line_axes(ax)
         if k == 0:
