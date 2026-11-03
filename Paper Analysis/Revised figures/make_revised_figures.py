@@ -824,13 +824,10 @@ def _draw_ising_example(out: Path, W: float, H: float) -> None:
 
 
 def data_stack(ax: plt.Axes, x: float, y: float, w: float, n: int, slab: float, gap: float) -> float:
-    """Stack of slabs standing for a dataset of states, with an atom icon in the middle; returns its top."""
+    """Stack of slabs standing for a dataset of states, with an atom icon on its front; returns its top."""
     depth = np.array([0.05, 0.035])
-    mid = {n // 2 - 1, n // 2, n // 2 + 1}
     for k in range(n):
         yk = y + k * (slab + gap)
-        if k in mid:
-            continue
         front = Rectangle((x, yk), w, slab, fc="0.18", ec=GREEN, lw=0.5)
         side = Polygon([(x + w, yk), (x + w, yk + slab), (x + w + depth[0], yk + slab + depth[1]),
                         (x + w + depth[0], yk + depth[1])], fc="0.35", ec=GREEN, lw=0.5)
@@ -838,14 +835,14 @@ def data_stack(ax: plt.Axes, x: float, y: float, w: float, n: int, slab: float, 
                         (x + depth[0], yk + slab + depth[1])], fc="0.35", ec=GREEN, lw=0.5)
         for p in (side, topf, front):
             ax.add_patch(p)
-    y_mid = y + (n // 2 - 1) * (slab + gap)
-    h_mid = 3 * slab + 2 * gap
-    ax.add_patch(Rectangle((x, y_mid), w, h_mid, fc="0.94", ec=GREEN, lw=0.5))
-    cx, cy = x + w / 2, y_mid + h_mid / 2
+    top = y + n * (slab + gap)
+    cx, cy, half = x + w / 2, (y + top) / 2, 0.15
+    ax.add_patch(FancyBboxPatch((cx - half, cy - half), 2 * half, 2 * half, boxstyle="round,pad=0.01",
+                                fc="0.94", ec=GREEN, lw=0.6, zorder=5))
     for a in (0, 60, 120):
-        ax.add_patch(Ellipse((cx, cy), 0.32 * w * 2.2, 0.11, angle=a, fill=False, ec=ORANGE, lw=0.8))
-    ax.add_patch(Circle((cx, cy), 0.022, fc=ORANGE, ec="none"))
-    return y + n * (slab + gap)
+        ax.add_patch(Ellipse((cx, cy), 0.26, 0.09, angle=a, fill=False, ec=ORANGE, lw=0.8, zorder=6))
+    ax.add_patch(Circle((cx, cy), 0.02, fc=ORANGE, ec="none", zorder=6))
+    return top
 
 
 def circuit(ax: plt.Axes, x: float, yc: float, s: int) -> float:
