@@ -61,6 +61,7 @@ COL_W = 3.4
 PAGE_W = 7.0
 GREEN = "#1b9e77"
 ORANGE = "#d95f02"
+LIGHT_BLUE = "#56b4e9"
 KERNEL_COLORS = {"ipr": GREEN, "hs": ORANGE}
 KERNEL_NAMES = {"ipr": "IPR", "hs": "HS"}
 BASIS_COLORS = {"IPR X": GREEN, "IPR XY": GREEN, "IPR Z": ORANGE}
@@ -732,7 +733,7 @@ def fig_analytical(out: Path) -> None:
 
 
 # ---------------------------------------------------------------- schematic figures
-SPIN_COLORS = {"0": ORANGE, "1": "#7570b3", "+": GREEN}
+SPIN_COLORS = {"0": ORANGE, "1": LIGHT_BLUE, "+": GREEN}
 # Schematics set their math in Computer Modern, the font of the equations in the manuscript.
 SCHEMATIC_RC = {"mathtext.fontset": "cm"}
 
@@ -908,7 +909,7 @@ def _draw_scheme(out: Path, W: float, H: float) -> None:
     px, py = r * np.cos(phi), r * np.sin(phi)
     edges = np.deg2rad([100.0, -20.0, -140.0])
     sector = np.digitize(np.mod(phi - edges[2], 2 * np.pi), np.sort(np.mod(edges - edges[2], 2 * np.pi)))
-    for k, c in enumerate((GREEN, "0.2", ORANGE)):
+    for k, c in enumerate((GREEN, LIGHT_BLUE, ORANGE)):
         m = sector == k + 1
         svm.scatter(px[m], py[m], s=0.8, color=c, linewidths=0)
     for e in edges:
