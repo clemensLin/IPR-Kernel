@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import pickle
 import sys
 from pathlib import Path
@@ -29,7 +28,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib import font_manager
 from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm, to_rgb
 from matplotlib.lines import Line2D
 from matplotlib.patches import Arc, Circle, Ellipse, FancyBboxPatch, Polygon, Rectangle
@@ -70,32 +68,18 @@ L_MARKERS = {20: "o", 50: "s", 100: "^"}
 DELTA_S_CMAP = LinearSegmentedColormap.from_list("green_white_orange", [GREEN, "#ffffff", ORANGE], N=512)
 
 
-# Arial is not installed system-wide here; these copies ship with ROOT. Set
-# IPR_FONT_DIR to another folder holding arial*.ttf if this path does not exist.
-ARIAL_DIRS = [os.environ.get("IPR_FONT_DIR", ""), "/opt/software/root/6.36.00/fonts"]
-
-
-def register_arial() -> bool:
-    """Make Arial available to matplotlib without installing it; True if found."""
-    for folder in filter(None, ARIAL_DIRS):
-        files = sorted(Path(folder).glob("arial*.ttf"))
-        if files:
-            for f in files:
-                font_manager.fontManager.addfont(str(f))
-            return True
-    return False
-
-
 def apply_style() -> None:
-    """Shared rcParams for every revised figure, Arial text and Computer Modern math, the font of the equations in the manuscript."""
-    if not register_arial():
-        print("warning: Arial not found, falling back to Liberation Sans")
+    """Shared rcParams for every revised figure: Computer Modern throughout, the font of the manuscript.
+
+    matplotlib ships the Computer Modern fonts, so no LaTeX installation is needed.
+    """
     plt.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Liberation Sans", "DejaVu Sans"],
+        "font.family": "serif",
+        "font.serif": ["cmr10"],
         "mathtext.fontset": "cm",
-        # This Arial build lacks U+2212; use the ASCII hyphen for negative ticks.
-        "axes.unicode_minus": False,
+        # cmr10 has no minus glyph; typeset tick labels as math so negatives get one.
+        "axes.formatter.use_mathtext": True,
+        "axes.unicode_minus": True,
         "font.size": 8,
         "axes.labelsize": 8,
         "axes.titlesize": 8,
@@ -144,7 +128,7 @@ def add_axes(fig: plt.Figure, left: float, bottom: float, width: float, height: 
 
 def panel_label(ax: plt.Axes, label: str) -> None:
     ax.annotate(label, xy=(0, 1), xycoords="axes fraction", xytext=(-3, 3), textcoords="offset points",
-                ha="right", va="bottom", fontsize=9, fontweight="bold")
+                ha="right", va="bottom", fontsize=9, fontfamily="cmb10")
 
 
 def inset_text(ax: plt.Axes, text: str, loc: str = "upper left") -> None:
