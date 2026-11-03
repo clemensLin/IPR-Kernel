@@ -910,7 +910,7 @@ def _draw_scheme(out: Path, W: float, H: float) -> None:
     edges = np.deg2rad([100.0, -20.0, -140.0])
     sector = np.digitize(np.mod(phi - edges[2], 2 * np.pi), np.sort(np.mod(edges - edges[2], 2 * np.pi)))
     # Keep a white margin around each boundary ray (distance to the segment from the center to the rim).
-    margin = 0.1
+    margin = 0.06
     keep = np.ones_like(px, dtype=bool)
     for e in edges:
         t = px * np.cos(e) + py * np.sin(e)
