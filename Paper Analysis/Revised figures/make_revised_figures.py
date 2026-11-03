@@ -118,7 +118,8 @@ def apply_style() -> None:
         "legend.handletextpad": 0.5,
         "legend.labelspacing": 0.25,
         "legend.columnspacing": 1.0,
-        "legend.borderaxespad": 0.3,
+        # In units of the 7 pt legend font: 0.7 -> 4.9 pt, clear of the 3 pt inward ticks.
+        "legend.borderaxespad": 0.7,
         "pdf.fonttype": 42,
         "savefig.dpi": 400,
     })
@@ -142,11 +143,14 @@ def panel_label(ax: plt.Axes, label: str) -> None:
 
 
 def inset_text(ax: plt.Axes, text: str, loc: str = "upper left") -> None:
-    x, ha = (0.05, "left") if "left" in loc else (0.95, "right")
-    y, va = (0.94, "top") if "upper" in loc else (0.06, "bottom")
-    ax.text(x, y, text, transform=ax.transAxes, ha=ha, va=va, fontsize=7,
-            bbox={"boxstyle": "round,pad=0.2,rounding_size=0.2", "facecolor": "white", "edgecolor": "none",
-                  "alpha": BOX_ALPHA})
+    """In-panel label at a fixed offset from the corner, so its box stays clear of the inward tick marks."""
+    off = 6.0  # points: 3 pt ticks + 1.4 pt box padding + a small margin
+    x, ha, dx = (0.0, "left", off) if "left" in loc else (1.0, "right", -off)
+    y, va, dy = (1.0, "top", -off) if "upper" in loc else (0.0, "bottom", off)
+    ax.annotate(text, xy=(x, y), xycoords="axes fraction", xytext=(dx, dy), textcoords="offset points",
+                ha=ha, va=va, fontsize=7,
+                bbox={"boxstyle": "round,pad=0.2,rounding_size=0.2", "facecolor": "white", "edgecolor": "none",
+                      "alpha": BOX_ALPHA})
 
 
 def line_axes(ax: plt.Axes) -> None:
