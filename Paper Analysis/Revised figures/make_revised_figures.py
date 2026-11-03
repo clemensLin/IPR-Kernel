@@ -67,6 +67,7 @@ KERNEL_NAMES = {"ipr": "IPR", "hs": "HS"}
 BASIS_COLORS = {"IPR X": GREEN, "IPR XY": GREEN, "IPR Z": ORANGE}
 BASIS_LABELS = {"IPR X": r"$I^{(X)}$", "IPR XY": r"$I^{(XY)}$", "IPR Z": r"$I^{(Z)}$"}
 L_MARKERS = {20: "o", 50: "s", 100: "^"}
+BOX_ALPHA = 0.85
 DELTA_S_CMAP = LinearSegmentedColormap.from_list("green_white_orange", [GREEN, "#ffffff", ORANGE], N=512)
 
 
@@ -106,7 +107,12 @@ def apply_style() -> None:
         "xtick.major.pad": 2.5,
         "ytick.major.pad": 2.5,
         "axes.labelpad": 2.0,
-        "legend.frameon": False,
+        # One box style for every legend and in-panel label: white, rounded, no outline, slightly transparent.
+        "legend.frameon": True,
+        "legend.fancybox": True,
+        "legend.facecolor": "white",
+        "legend.edgecolor": "none",
+        "legend.framealpha": BOX_ALPHA,
         "legend.handlelength": 1.8,
         "legend.handletextpad": 0.5,
         "legend.labelspacing": 0.25,
@@ -137,7 +143,8 @@ def inset_text(ax: plt.Axes, text: str, loc: str = "upper left") -> None:
     x, ha = (0.05, "left") if "left" in loc else (0.95, "right")
     y, va = (0.94, "top") if "upper" in loc else (0.06, "bottom")
     ax.text(x, y, text, transform=ax.transAxes, ha=ha, va=va, fontsize=7,
-            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8, "pad": 1.0})
+            bbox={"boxstyle": "round,pad=0.2,rounding_size=0.2", "facecolor": "white", "edgecolor": "none",
+                  "alpha": BOX_ALPHA})
 
 
 def line_axes(ax: plt.Axes) -> None:
@@ -212,8 +219,7 @@ def ipr_overlay(ax: plt.Axes, dataset: str, basis: tuple[str, str], legend_loc: 
         Line2D([0], [0], color="0.2", lw=1.2, alpha=0.25, label=r"larger $L$ (fainter)"),
         Line2D([0], [0], marker="o", ls="None", mfc="white", mec="black", mew=0.6, ms=3.5, label=r"crossing per $L$"),
     ]
-    ax.legend(handles=handles, loc=legend_loc, ncol=2, frameon=True, facecolor="white", edgecolor="none",
-              framealpha=0.85)
+    ax.legend(handles=handles, loc=legend_loc, ncol=2)
 
 
 def load_thermal_svm(path: Path) -> dict:
@@ -434,7 +440,7 @@ def fig_heisenberg_xz(out: Path) -> None:
     ax_a.set_xlabel(r"$\Delta$")
     ax_a.set_ylabel("IPR")
     inset_text(ax_a, r"$L=10$", "upper right")
-    ax_a.legend(loc="center right")
+    ax_a.legend(loc="upper right", bbox_to_anchor=(1.0, 0.86))
     line_axes(ax_a)
     ipr_overlay(ax_b, "heisenberg", ("IPR X", "IPR Z"), legend_loc="lower right")
     panel_label(ax_a, "(a)")
@@ -481,8 +487,7 @@ def fig_heisenberg_xz_kernel(out: Path, svm_tables: dict) -> None:
     dashed.set_dashes((4, 2))
     handles = [Line2D([0], [0], color=c, lw=1.2, label=n) for _, n, c in kernels]
     handles += [Line2D([0], [0], color="0.2", lw=0.9, marker="o", ms=2.4, label="global"), dashed]
-    ax_b.legend(handles=handles, loc="center right", ncol=2, frameon=True, facecolor="white", edgecolor="none",
-                framealpha=0.85)
+    ax_b.legend(handles=handles, loc="center right", ncol=2)
     panel_label(axes[0], "(a)")
     panel_label(ax_b, "(b)")
     save(fig, out, "heisenberg_xz_kernel")
@@ -548,7 +553,7 @@ def fig_xxz_field(out: Path) -> None:
         ax.text(x, y, text, ha="center", va="center")
     handles = [Line2D([0], [0], color=NAVY, lw=0.8, label="IPR crossing"),
                Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
-    ax.legend(handles=handles, loc="upper left", frameon=True, facecolor="white", edgecolor="none", framealpha=0.85)
+    ax.legend(handles=handles, loc="upper left")
     cax = add_axes(fig, 2.8, 0.38, 0.07, 2.3)
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(length=2.0, width=0.5)
