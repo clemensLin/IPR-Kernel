@@ -682,7 +682,7 @@ def fig_thermal_phase_diagram(out: Path) -> None:
         ax.invert_yaxis()
         ax.minorticks_on()
         ax.set_xlabel(r"$h$")
-        inset_text(ax, rf"$L={L}$", "lower right")
+        inset_text(ax, rf"$L={L}$")
         panel_label(ax, f"({'abc'[k]})")
         if k == 0:
             ax.set_ylabel(r"$\beta$")
