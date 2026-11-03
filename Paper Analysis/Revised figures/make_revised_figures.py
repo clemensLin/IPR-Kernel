@@ -794,7 +794,8 @@ def fig_ising_example(out: Path) -> None:
     W, H = COL_W - 0.06, 3.05
     fig = new_figure(W, H)
     ax = canvas(fig)
-    ax.text(W / 2, H - 0.2, r"$H=-J\,\sum_i Z_iZ_{i+1}-h\,\sum_i X_i$", ha="center", va="center",
+    # {\sum}_i puts the index beside the sum, so the formula sits centred in its box.
+    ax.text(W / 2, H - 0.2, r"$H=-J\,{\sum}_i Z_iZ_{i+1}-h\,{\sum}_i X_i$", ha="center", va="center",
             bbox={"boxstyle": "round,pad=0.35", "fc": "0.93", "ec": "0.45", "lw": 0.6})
 
     radius, n = 0.44, 12
