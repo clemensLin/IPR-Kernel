@@ -32,7 +32,8 @@ import pandas as pd
 from matplotlib import font_manager
 from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm, to_rgb
 from matplotlib.lines import Line2D
-from matplotlib.patches import Arc, Circle, Ellipse, FancyBboxPatch, Polygon, Rectangle
+from matplotlib.patches import Arc, Circle, Ellipse, FancyBboxPatch, PathPatch, Polygon, Rectangle
+from matplotlib.path import Path as MplPath
 from matplotlib.ticker import MultipleLocator
 from sklearn.preprocessing import KernelCenterer
 
@@ -847,21 +848,46 @@ def data_stack(ax: plt.Axes, x: float, y: float, w: float, n: int, slab: float, 
     return top
 
 
+QCIRC_LW = 0.5  # quantikz draws wires, gates and meters with thin (0.4 pt) TikZ lines
+
+
+def curly_brace(ax: plt.Axes, x: float, y0: float, y1: float, width: float, tip: int) -> None:
+    """Vertical curly brace between y0 and y1 whose straight back sits at x; tip=-1 points left, +1 right."""
+    q, ym = tip * width / 2, (y0 + y1) / 2
+    h = min(abs(q), (y1 - y0) / 4)
+    verts = [(x, y1), (x + q, y1), (x + q, y1 - h), (x + q, ym + h), (x + q, ym), (x + 2 * q, ym),
+             (x + q, ym), (x + q, ym - h), (x + q, y0 + h), (x + q, y0), (x, y0)]
+    codes = [MplPath.MOVETO, MplPath.CURVE3, MplPath.CURVE3, MplPath.LINETO, MplPath.CURVE3, MplPath.CURVE3,
+             MplPath.CURVE3, MplPath.CURVE3, MplPath.LINETO, MplPath.CURVE3, MplPath.CURVE3]
+    ax.add_patch(PathPatch(MplPath(verts, codes), fill=False, ec="black", lw=QCIRC_LW, capstyle="round"))
+
+
+def meter(ax: plt.Axes, x: float, y: float, w: float = 0.13, h: float = 0.09) -> None:
+    """Quantikz measurement symbol: box, semicircular dial and needle with an arrowhead."""
+    ax.add_patch(Rectangle((x - w / 2, y - h / 2), w, h, fc="white", ec="black", lw=QCIRC_LW, zorder=3))
+    cy = y - 0.3 * h
+    ax.add_patch(Arc((x, cy), 0.7 * w, 1.0 * h, theta1=0, theta2=180, ec="black", lw=QCIRC_LW, zorder=4))
+    ax.annotate("", xy=(x + 0.32 * w, y + 0.38 * h), xytext=(x, cy), zorder=4,
+                arrowprops={"arrowstyle": "-|>,head_length=0.25,head_width=0.12", "lw": QCIRC_LW,
+                            "color": "black", "shrinkA": 0, "shrinkB": 0, "mutation_scale": 6})
+
+
 def circuit(ax: plt.Axes, x: float, yc: float, s: int) -> float:
-    """Measurement circuit in basis U_s; returns the x position where the output label ends."""
+    """Quantikz-style measurement circuit in basis U_s; returns the x position where the output label ends."""
     wires = (yc + 0.12, yc, yc - 0.12)
+    x_in, x_gate, x_meter, x_out = x + 0.1, x + 0.31, x + 0.6, x + 0.75
+    span = (wires[2] - 0.06, wires[0] + 0.06)
     ax.text(x, yc, r"$\psi$", ha="right", va="center")
+    curly_brace(ax, x_in, *span, 0.06, tip=-1)
     for y in wires:
-        ax.plot([x + 0.05, x + 0.72], [y, y], color="black", lw=0.6)
-    ax.add_patch(Rectangle((x + 0.17, yc - 0.17), 0.2, 0.34, fc="white", ec="black", lw=0.6, zorder=3))
-    ax.text(x + 0.27, yc, rf"$U_{s}$", ha="center", va="center", fontsize=7, zorder=4)
-    for y in wires:
-        mx = x + 0.5
-        ax.add_patch(Rectangle((mx - 0.07, y - 0.045), 0.14, 0.09, fc="white", ec="black", lw=0.5, zorder=3))
-        ax.add_patch(Arc((mx, y - 0.025), 0.09, 0.07, theta1=0, theta2=180, ec="black", lw=0.5, zorder=4))
-        ax.plot([mx, mx + 0.04], [y - 0.025, y + 0.035], color="black", lw=0.5, zorder=4)
-    ax.text(x + 0.77, yc, rf"$I^{{({s})}}(\psi)$", ha="left", va="center")
-    return x + 1.2
+        ax.plot([x_in, x_out], [y, y], color="black", lw=QCIRC_LW, zorder=2)
+        meter(ax, x_meter, y)
+    ax.add_patch(Rectangle((x_gate - 0.11, yc - 0.18), 0.22, 0.36, fc="white", ec="black", lw=QCIRC_LW, zorder=3))
+    ax.text(x_gate, yc, rf"$U_{s}$", ha="center", va="center", zorder=4)
+    curly_brace(ax, x_out, *span, 0.06, tip=1)
+    t = ax.text(x_out + 0.1, yc, rf"$I^{{({s})}}(\psi)$", ha="left", va="center")
+    ax.figure.canvas.draw()
+    return ax.transData.inverted().transform(t.get_window_extent().get_points())[1, 0] + 0.1
 
 
 def fig_scheme(out: Path) -> None:
