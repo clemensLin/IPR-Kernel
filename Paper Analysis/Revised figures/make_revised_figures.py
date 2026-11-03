@@ -635,10 +635,8 @@ def fig_thermal_decision(out: Path, svm: dict) -> None:
     kernel_handles = [Line2D([0], [0], color=KERNEL_COLORS[k], lw=1.2, label=KERNEL_NAMES[k]) for k in ("ipr", "hs")]
     size_handles = [Line2D([0], [0], color="0.25", marker=L_MARKERS[L], ls="None", ms=3, label=rf"$L={L}$")
                     for L in (20, 50, 100)]
-    # Legends fill column by column; this order gives row 1: IPR, HS and row 2: the three sizes.
-    spacer = Line2D([], [], linestyle="none", label=" ")
-    order = [kernel_handles[0], size_handles[0], kernel_handles[1], size_handles[1], spacer, size_handles[2]]
-    ax_c.legend(handles=order, loc="lower left", ncol=3, columnspacing=0.8)
+    # Same legend layout as the KTA/BA panels of the thermal results figure.
+    ax_c.legend(handles=kernel_handles + size_handles, loc="lower left", ncol=3, columnspacing=0.8)
     for ax, lab in zip((ax_a, ax_b, ax_c), "abc"):
         panel_label(ax, f"({lab})")
     save(fig, out, "thermal_decision_functions")
