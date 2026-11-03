@@ -788,15 +788,28 @@ def block_arrow(ax: plt.Axes, xy: tuple[float, float], angle: float, text: str, 
             bbox={"boxstyle": "darrow,pad=0.22", "fc": "white", "ec": "black", "lw": lw, "ls": ls})
 
 
+def hamiltonian_box(ax: plt.Axes, x: float, y: float, formula: str, pad: float = 0.04) -> None:
+    """Formula in a rounded grey box centred on its main line, so limits below sums do not push it off-centre."""
+    t = ax.text(x, y, formula, ha="center", va="baseline", zorder=3)
+    ref = ax.text(x, y, r"$H$", ha="center", va="baseline", alpha=0)
+    ax.figure.canvas.draw()
+    inv = ax.transData.inverted()
+    (x0, y0), (x1, y1) = inv.transform(t.get_window_extent().get_points())
+    r1 = inv.transform(ref.get_window_extent().get_points())[1, 1]
+    ref.remove()
+    mid = (y + r1) / 2  # halfway between the baseline and the top of the capital H
+    half = max(mid - y0, y1 - mid) + pad
+    ax.add_patch(FancyBboxPatch((x0 - pad, mid - half), x1 - x0 + 2 * pad, 2 * half,
+                                boxstyle="round,pad=0,rounding_size=0.04", fc="0.93", ec="0.45", lw=0.6, zorder=2))
+
+
 def fig_ising_example(out: Path) -> None:
     """Spin configurations of the TFIM and the values the IPR and HS kernels assign to pairs of them."""
     # Narrower than the column so the saved figure, including its padding, fits it.
-    W, H = COL_W - 0.06, 3.05
+    W, H = COL_W - 0.06, 3.15
     fig = new_figure(W, H)
     ax = canvas(fig)
-    # {\sum}_i puts the index beside the sum, so the formula sits centred in its box.
-    ax.text(W / 2, H - 0.2, r"$H=-J\,{\sum}_i Z_iZ_{i+1}-h\,{\sum}_i X_i$", ha="center", va="center",
-            bbox={"boxstyle": "round,pad=0.35", "fc": "0.93", "ec": "0.45", "lw": 0.6})
+    hamiltonian_box(ax, W / 2, H - 0.3, r"$H=-J\,\sum_i Z_iZ_{i+1}-h\,\sum_i X_i$")
 
     radius, n = 0.44, 12
     top, left, right = (W / 2, 2.05), (W / 2 - 0.9, 0.55), (W / 2 + 0.9, 0.55)
