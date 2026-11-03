@@ -470,14 +470,25 @@ def fig_heisenberg_xz(out: Path) -> None:
 
 
 def fig_heisenberg_xz_kernel(out: Path, svm_tables: dict) -> None:
-    """X/Z-kernel Gram matrices (2x2 grid) and balanced accuracy of the X/Z and XY/Z kernels."""
-    size, gap, x0, b0 = 0.95, 0.14, 0.45, 0.38
-    h = 2 * size + gap
+    """X/Z-kernel Gram matrices (one row) and balanced accuracy of the X/Z and XY/Z kernels at the same height."""
+    size, gap, x0, b0 = 1.1, 0.14, 0.45, 0.38
+    h = size
     fig = new_figure(PAGE_W, h + 0.5)
-    axes, im = gram_grid(fig, x0, b0, size, gap, "heisenberg", ("IPR X", "IPR Z"))
-    colorbar(fig, im, x0 + 2 * size + gap + 0.07, b0, h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
+    axes, im = [], None
+    for k, L in enumerate((8, 16, 24)):
+        ax = add_axes(fig, x0 + k * (size + gap), b0, size, size)
+        g = compute_ipr_gram_matrix("heisenberg", L, basis=("IPR X", "IPR Z"), normalize=True)
+        im = gram_panel(ax, g["K"], g["x"])
+        inset_text(ax, rf"$L={L}$")
+        ax.set_xlabel(r"$\Delta_i$")
+        if k == 0:
+            ax.set_ylabel(r"$\Delta_j$")
+        else:
+            ax.set_yticklabels([])
+        axes.append(ax)
+    colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.07, b0, h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
 
-    ax_b = add_axes(fig, 3.55, b0, 3.4, h)
+    ax_b = add_axes(fig, 5.0, b0, 1.95, h)
     kernels = (("X_Z", r"$X$, $Z$", ORANGE), ("XY_Z", r"$XY$, $Z$", GREEN))
     for key, name, color in kernels:
         arr = np.asarray(svm_tables[key])
