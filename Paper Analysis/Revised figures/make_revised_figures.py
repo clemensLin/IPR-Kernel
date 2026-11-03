@@ -349,13 +349,13 @@ def fig_thermal(out: Path, svm: dict) -> None:
             ax = add_axes(fig, x0 + c * (size + gap), y0 + r * (size + 0.06), size, size)
             g = compute_thermal_gram_matrix(kind=kind, L=100, beta=beta, source="processed", normalize=True)
             im = gram_panel(ax, g["K"], g["x"])
+            inset_text(ax, rf"$\beta={beta:g}$")
             ax.set_xticks([0, 1, 2, 3, 4])
             ax.set_yticks([0, 1, 2, 3, 4])
             if r == 0:
                 ax.set_xlabel(r"$h_i$")
             else:
                 ax.set_xticklabels([])
-                ax.set_title(rf"$\beta={beta:g}$", pad=3)
             if c == 0:
                 ax.set_ylabel(f"{KERNEL_NAMES[kind]}\n" + r"$h_j$")
             else:
