@@ -135,8 +135,9 @@ def add_axes(fig: plt.Figure, left: float, bottom: float, width: float, height: 
 
 
 def panel_label(ax: plt.Axes, label: str) -> None:
-    ax.annotate(label, xy=(0, 1), xycoords="axes fraction", xytext=(-3, 3), textcoords="offset points",
-                ha="right", va="bottom", fontsize=9, fontfamily="cmb10")
+    # Left-aligned at a fixed offset, so letters of panels that share a left edge line up exactly.
+    ax.annotate(label, xy=(0, 1), xycoords="axes fraction", xytext=(-15, 3), textcoords="offset points",
+                ha="left", va="bottom", fontsize=9, fontfamily="cmb10")
 
 
 def inset_text(ax: plt.Axes, text: str, loc: str = "upper left") -> None:
@@ -380,9 +381,12 @@ def fig_thermal(out: Path, svm: dict) -> None:
             gram_axes[(r, c)] = ax
     colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.07, y0, 2 * size + 0.06, r"$\tilde K(h_i,h_j)$")
 
-    xr, wr = 5.12, 1.82
-    ax_k = add_axes(fig, xr, 1.72, wr, 1.12)
-    ax_l = add_axes(fig, xr, y0, wr, 1.12, sharex=ax_k)
+    # Right column spans exactly the Gram block, so letters (a) and (b) share their height.
+    xr, wr, vgap = 5.12, 1.82, 0.22
+    top = y0 + 2 * size + 0.06
+    hr = (top - y0 - vgap) / 2
+    ax_k = add_axes(fig, xr, top - hr, wr, hr)
+    ax_l = add_axes(fig, xr, y0, wr, hr, sharex=ax_k)
     for kind in ("ipr", "hs"):
         for L in (20, 50, 100):
             bs = sorted(set(available_thermal_betas(kind="ipr", L=L, source="processed"))
@@ -600,8 +604,8 @@ def fig_thermal_decision(out: Path, svm: dict) -> None:
     fig = new_figure(PAGE_W, 1.95)
     w, h, y0 = 1.85, 1.45, 0.4
     ax_a = add_axes(fig, 0.5, y0, w, h)
-    ax_b = add_axes(fig, 0.5 + w + 0.18, y0, w, h, sharey=ax_a)
-    ax_c = add_axes(fig, 0.5 + 2 * w + 0.75, y0, w, h)
+    ax_b = add_axes(fig, 0.5 + w + 0.35, y0, w, h, sharey=ax_a)
+    ax_c = add_axes(fig, 0.5 + 2 * w + 0.93, y0, w, h)
     res = svm[100]
     hc = float(res["phase_boundary"])
     for ax, kind in ((ax_a, "ipr"), (ax_b, "hs")):
