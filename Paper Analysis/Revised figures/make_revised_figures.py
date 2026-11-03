@@ -11,7 +11,8 @@ The thermal SVM sweep (decision functions, balanced accuracies) is the most
 expensive input. If PICKLE exists it is loaded, otherwise the sweep is run
 with the settings of "TFIM Thermal/Thermal analysis.ipynb" and cached there.
 TFIM balanced accuracies are read from tfim_svm_tables.json, which holds the
-values of Tables I and II of the manuscript.
+values of Tables I and II of the manuscript. thermal_svm_tables.json records the
+resulting Table IV values for reference; the figures use the full sweep.
 """
 from __future__ import annotations
 
