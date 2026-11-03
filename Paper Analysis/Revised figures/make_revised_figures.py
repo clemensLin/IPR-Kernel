@@ -653,7 +653,9 @@ def delta_s_grid(L: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 def fig_thermal_phase_diagram(out: Path) -> None:
     """Delta S_P in the (h, beta) plane with the expected crossover T = |h - h_c|."""
     fig = new_figure(PAGE_W, 2.05)
-    w, h, y0, x0, gap = 1.85, 1.5, 0.4, 0.5, 0.14
+    # Wide gaps so each panel letter sits clearly next to its own panel.
+    x0, gap, y0, h = 0.5, 0.3, 0.4, 1.5
+    w = (3 * 1.85 + 2 * 0.14 - 2 * gap) / 3
     data = [(L, *delta_s_grid(L)) for L in (10, 50, 100)]
     vmax = max(np.nanmax(np.abs(d)) for *_, d in data)
     norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
@@ -671,7 +673,7 @@ def fig_thermal_phase_diagram(out: Path) -> None:
         ax.invert_yaxis()
         ax.minorticks_on()
         ax.set_xlabel(r"$h$")
-        inset_text(ax, rf"$L={L}$", "upper right")
+        inset_text(ax, rf"$L={L}$", "lower right")
         panel_label(ax, f"({'abc'[k]})")
         if k == 0:
             ax.set_ylabel(r"$\beta$")
