@@ -544,8 +544,8 @@ def fig_xxz_field(out: Path) -> None:
     ax.set_xticks(np.arange(-4, 5, 2))
     ax.set_yticks(np.arange(-4, 5, 2))
     ax.minorticks_on()
-    for x, y, text in ((-3.0, 0.0, "Ferromagnetic"), (0.0, -1.3, "Paramagnetic"), (3.6, 0.0, "Anti-\nferro-\nmagnetic")):
-        ax.text(x, y, text, ha="center", va="center", fontsize=7)
+    for x, y, text in ((-3.0, 0.0, "FM"), (0.2, 0.0, "XY"), (3.6, 0.0, "AFM")):
+        ax.text(x, y, text, ha="center", va="center")
     handles = [Line2D([0], [0], color=NAVY, lw=0.8, label="IPR crossing"),
                Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
     ax.legend(handles=handles, loc="upper left", frameon=True, facecolor="white", edgecolor="none", framealpha=0.85)
