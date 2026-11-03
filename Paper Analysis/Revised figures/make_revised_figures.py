@@ -310,28 +310,44 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     save(fig, out, "tfim_results")
 
 
-def fig_heisenberg(out: Path) -> None:
-    """Heisenberg: XY/Z IPR crossings and Gram matrices for three sizes."""
-    fig = new_figure(PAGE_W, 2.1)
-    ax_a = add_axes(fig, 0.45, 0.38, 2.35, 1.62)
-    size, gap, x0 = 1.0, 0.14, 3.2
-    b = 0.38 + (1.62 - size) / 2
-    axes = [add_axes(fig, x0 + k * (size + gap), b, size, size) for k in range(3)]
+XXZ_GRID_L = (6, 12, 18, 24)
 
+
+def xxz_gram_grid(fig: plt.Figure, x0: float, y0: float, size: float, gap: float,
+                  basis: tuple[str, str]) -> tuple[list[plt.Axes], object]:
+    """2x2 grid of normalized XXZ Gram matrices for XXZ_GRID_L, read row by row from the top left."""
+    axes, im = [], None
+    for k, L in enumerate(XXZ_GRID_L):
+        r, c = divmod(k, 2)
+        ax = add_axes(fig, x0 + c * (size + gap), y0 + (1 - r) * (size + gap), size, size)
+        g = compute_ipr_gram_matrix("heisenberg", L, basis=basis, normalize=True)
+        im = gram_panel(ax, g["K"], g["x"])
+        inset_text(ax, rf"$L={L}$")
+        ax.set_xticks([0, 1, 2, 3, 4, 5])
+        if r == 1:
+            ax.set_xlabel(r"$\Delta_i$")
+        else:
+            ax.set_xticklabels([])
+        if c == 0:
+            ax.set_ylabel(r"$\Delta_j$")
+        else:
+            ax.set_yticklabels([])
+        axes.append(ax)
+    return axes, im
+
+
+def fig_heisenberg(out: Path) -> None:
+    """Heisenberg: XY/Z IPR crossings and a 2x2 grid of Gram matrices."""
+    size, gap, y0 = 0.95, 0.14, 0.38
+    grid_h = 2 * size + gap
+    fig = new_figure(PAGE_W, grid_h + 0.5)
+    ax_a = add_axes(fig, 0.45, y0, 3.2, grid_h)
     ipr_overlay(ax_a, "heisenberg", ("IPR XY", "IPR Z"), legend_loc="lower right")
     ax_a.set_ylim(-5.4, 0.3)
 
-    im = None
-    for ax, L in zip(axes, (8, 16, 24)):
-        g = compute_ipr_gram_matrix("heisenberg", L, basis=("IPR XY", "IPR Z"), normalize=True)
-        im = gram_panel(ax, g["K"], g["x"])
-        inset_text(ax, rf"$L={L}$")
-        ax.set_xlabel(r"$\Delta_i$")
-        ax.set_xticks([0, 1, 2, 3, 4, 5])
-    axes[0].set_ylabel(r"$\Delta_j$")
-    for ax in axes[1:]:
-        ax.set_yticklabels([])
-    colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.07, b, size, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
+    x0 = 4.3
+    axes, im = xxz_gram_grid(fig, x0, y0, size, gap, ("IPR XY", "IPR Z"))
+    colorbar(fig, im, x0 + 2 * size + gap + 0.07, y0, grid_h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
     panel_label(ax_a, "(a)")
     panel_label(axes[0], "(b)")
     save(fig, out, "heisenberg_results")
@@ -449,25 +465,14 @@ def fig_heisenberg_xz(out: Path) -> None:
 
 
 def fig_heisenberg_xz_kernel(out: Path, svm_tables: dict) -> None:
-    """X/Z-kernel Gram matrices and balanced accuracy of the X/Z and XY/Z kernels."""
-    fig = new_figure(PAGE_W, 2.0)
-    size, gap, x0, b0, h = 1.0, 0.14, 0.45, 0.38, 1.52
-    b = b0 + (h - size) / 2
-    axes = [add_axes(fig, x0 + k * (size + gap), b, size, size) for k in range(3)]
-    im = None
-    for ax, L in zip(axes, (8, 16, 24)):
-        g = compute_ipr_gram_matrix("heisenberg", L, basis=("IPR X", "IPR Z"), normalize=True)
-        im = gram_panel(ax, g["K"], g["x"])
-        inset_text(ax, rf"$L={L}$")
-        ax.set_xlabel(r"$\Delta_i$")
-        ax.set_xticks([0, 1, 2, 3, 4, 5])
-    axes[0].set_ylabel(r"$\Delta_j$")
-    for ax in axes[1:]:
-        ax.set_yticklabels([])
-    cb_left = x0 + 3 * size + 2 * gap + 0.07
-    colorbar(fig, im, cb_left, b, size, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
+    """X/Z-kernel Gram matrices (2x2 grid) and balanced accuracy of the X/Z and XY/Z kernels."""
+    size, gap, x0, b0 = 0.95, 0.14, 0.45, 0.38
+    h = 2 * size + gap
+    fig = new_figure(PAGE_W, h + 0.5)
+    axes, im = xxz_gram_grid(fig, x0, b0, size, gap, ("IPR X", "IPR Z"))
+    colorbar(fig, im, x0 + 2 * size + gap + 0.07, b0, h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
 
-    ax_b = add_axes(fig, 4.75, b0, 2.2, h)
+    ax_b = add_axes(fig, 3.55, b0, 3.4, h)
     kernels = (("X_Z", r"$X$, $Z$", ORANGE), ("XY_Z", r"$XY$, $Z$", GREEN))
     for key, name, color in kernels:
         arr = np.asarray(svm_tables[key])
