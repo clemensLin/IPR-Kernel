@@ -265,10 +265,12 @@ def ba_by_beta(result: dict, kind: str, split: str) -> tuple[np.ndarray, np.ndar
 
 # ---------------------------------------------------------------- main-text figures
 def fig_tfim(out: Path, svm_tables: dict) -> None:
-    """TFIM: IPR crossings, Gram matrix at L=10, global and local balanced accuracy."""
-    fig = new_figure(PAGE_W, 4.25)
-    ax_a = add_axes(fig, 0.45, 2.45, 3.05, 1.7)
-    ax_b = add_axes(fig, 4.35, 2.45, 1.7, 1.7)
+    """TFIM: IPR crossings, 2x2 Gram matrices, global and local balanced accuracy (top row as in fig_heisenberg)."""
+    size, gap = 0.95, 0.14
+    grid_h = 2 * size + gap
+    y_top = 2.45
+    fig = new_figure(PAGE_W, y_top + grid_h + 0.15)
+    ax_a = add_axes(fig, 0.45, y_top, 3.05, grid_h)
     ax_c = add_axes(fig, 0.45, 0.38, 3.05, 1.5)
     ax_d = add_axes(fig, 3.9, 0.38, 3.05, 1.5)
 
@@ -276,12 +278,10 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     ax_a.set_ylim(-33, 1.5)
     ax_a.xaxis.set_major_locator(MultipleLocator(1))
 
-    g = compute_ipr_gram_matrix("tfim1d", 10, basis=("IPR X", "IPR Z"), normalize=True)
-    im = gram_panel(ax_b, g["K"], g["x"])
-    ax_b.set_xlabel(r"$h_i$")
-    ax_b.set_ylabel(r"$h_j$")
-    inset_text(ax_b, r"$L=10$", "upper left")
-    colorbar(fig, im, 6.12, 2.45, 1.7, r"$\tilde K_{\mathrm{IPR}}(h_i,h_j)$")
+    x0 = 4.3
+    grid_axes, im = gram_grid(fig, x0, y_top, size, gap, "tfim1d", ("IPR X", "IPR Z"))
+    ax_b = grid_axes[0]
+    colorbar(fig, im, x0 + 2 * size + gap + 0.07, y_top, grid_h, r"$\tilde K_{\mathrm{IPR}}(h_i,h_j)$")
 
     shots = ["200", "500", "1000", "2000", "5000", "10000"]
     # Same green as the IPR curves in (a); opacity grows with the shot budget.
@@ -310,26 +310,27 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     save(fig, out, "tfim_results")
 
 
-XXZ_GRID_L = (6, 12, 18, 24)
+GRID_L = {"tfim1d": (10, 30, 50, 100), "heisenberg": (6, 12, 18, 24)}
+GRID_SYMBOL = {"tfim1d": "h", "heisenberg": r"\Delta"}
 
 
-def xxz_gram_grid(fig: plt.Figure, x0: float, y0: float, size: float, gap: float,
-                  basis: tuple[str, str]) -> tuple[list[plt.Axes], object]:
-    """2x2 grid of normalized XXZ Gram matrices for XXZ_GRID_L, read row by row from the top left."""
+def gram_grid(fig: plt.Figure, x0: float, y0: float, size: float, gap: float, dataset: str,
+              basis: tuple[str, str]) -> tuple[list[plt.Axes], object]:
+    """2x2 grid of normalized ground-state Gram matrices for GRID_L[dataset], read row by row from the top left."""
+    sym = GRID_SYMBOL[dataset]
     axes, im = [], None
-    for k, L in enumerate(XXZ_GRID_L):
+    for k, L in enumerate(GRID_L[dataset]):
         r, c = divmod(k, 2)
         ax = add_axes(fig, x0 + c * (size + gap), y0 + (1 - r) * (size + gap), size, size)
-        g = compute_ipr_gram_matrix("heisenberg", L, basis=basis, normalize=True)
+        g = compute_ipr_gram_matrix(dataset, L, basis=basis, normalize=True)
         im = gram_panel(ax, g["K"], g["x"])
         inset_text(ax, rf"$L={L}$")
-        ax.set_xticks([0, 1, 2, 3, 4, 5])
         if r == 1:
-            ax.set_xlabel(r"$\Delta_i$")
+            ax.set_xlabel(rf"${sym}_i$")
         else:
             ax.set_xticklabels([])
         if c == 0:
-            ax.set_ylabel(r"$\Delta_j$")
+            ax.set_ylabel(rf"${sym}_j$")
         else:
             ax.set_yticklabels([])
         axes.append(ax)
@@ -346,7 +347,7 @@ def fig_heisenberg(out: Path) -> None:
     ax_a.set_ylim(-5.4, 0.3)
 
     x0 = 4.3
-    axes, im = xxz_gram_grid(fig, x0, y0, size, gap, ("IPR XY", "IPR Z"))
+    axes, im = gram_grid(fig, x0, y0, size, gap, "heisenberg", ("IPR XY", "IPR Z"))
     colorbar(fig, im, x0 + 2 * size + gap + 0.07, y0, grid_h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
     panel_label(ax_a, "(a)")
     panel_label(axes[0], "(b)")
@@ -469,7 +470,7 @@ def fig_heisenberg_xz_kernel(out: Path, svm_tables: dict) -> None:
     size, gap, x0, b0 = 0.95, 0.14, 0.45, 0.38
     h = 2 * size + gap
     fig = new_figure(PAGE_W, h + 0.5)
-    axes, im = xxz_gram_grid(fig, x0, b0, size, gap, ("IPR X", "IPR Z"))
+    axes, im = gram_grid(fig, x0, b0, size, gap, "heisenberg", ("IPR X", "IPR Z"))
     colorbar(fig, im, x0 + 2 * size + gap + 0.07, b0, h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
 
     ax_b = add_axes(fig, 3.55, b0, 3.4, h)
