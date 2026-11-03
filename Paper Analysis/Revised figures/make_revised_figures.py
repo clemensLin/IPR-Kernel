@@ -909,11 +909,18 @@ def _draw_scheme(out: Path, W: float, H: float) -> None:
     px, py = r * np.cos(phi), r * np.sin(phi)
     edges = np.deg2rad([100.0, -20.0, -140.0])
     sector = np.digitize(np.mod(phi - edges[2], 2 * np.pi), np.sort(np.mod(edges - edges[2], 2 * np.pi)))
+    # Keep a white margin around each boundary ray (distance to the segment from the center to the rim).
+    margin = 0.1
+    keep = np.ones_like(px, dtype=bool)
+    for e in edges:
+        t = px * np.cos(e) + py * np.sin(e)
+        dist = np.where(t > 0, np.abs(px * np.sin(e) - py * np.cos(e)), np.hypot(px, py))
+        keep &= dist > margin
     for k, c in enumerate((GREEN, LIGHT_BLUE, ORANGE)):
-        m = sector == k + 1
+        m = keep & (sector == k + 1)
         svm.scatter(px[m], py[m], s=0.8, color=c, linewidths=0)
     for e in edges:
-        svm.plot([0, 1.15 * np.cos(e)], [0, 1.15 * np.sin(e)], color="black", lw=0.6)
+        svm.plot([0, np.cos(e)], [0, np.sin(e)], color="black", lw=0.6, solid_capstyle="butt")
     svm.set_xlim(-1.25, 1.35)
     svm.set_ylim(-1.25, 1.25)
     svm.set_xticks([])
