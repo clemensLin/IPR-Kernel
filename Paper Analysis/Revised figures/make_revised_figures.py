@@ -876,7 +876,7 @@ def _draw_scheme(out: Path, W: float, H: float) -> None:
     ax = canvas(fig)
 
     top = data_stack(ax, 0.1, 0.18, 0.42, 15, 0.065, 0.017)
-    ax.text(0.33, top + 0.08, r"States $\psi$", ha="center", va="bottom")
+    ax.text(0.33, top + 0.08, r"Data $\psi$", ha="center", va="bottom")
 
     rows = (1.4, 0.87, 0.34)
     y_mid = rows[1]
