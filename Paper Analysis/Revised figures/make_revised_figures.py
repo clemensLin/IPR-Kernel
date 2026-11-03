@@ -783,7 +783,8 @@ def block_arrow(ax: plt.Axes, xy: tuple[float, float], angle: float, text: str, 
 
 def fig_ising_example(out: Path) -> None:
     """Spin configurations of the TFIM and the values the IPR and HS kernels assign to pairs of them."""
-    W, H = COL_W, 3.05
+    # Narrower than the column so the saved figure, including its padding, fits it.
+    W, H = COL_W - 0.06, 3.05
     with plt.rc_context(SCHEMATIC_RC):
         _draw_ising_example(out, W, H)
 
