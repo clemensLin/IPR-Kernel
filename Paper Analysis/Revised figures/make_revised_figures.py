@@ -820,7 +820,9 @@ def fig_ising_example(out: Path) -> None:
     # Legend for the single-spin states.
     x0, y0 = 0.12, 1.75
     ax.add_patch(FancyBboxPatch((x0, y0), 0.5, 0.56, boxstyle="round,pad=0.02", fc="0.93", ec="0.45", lw=0.6))
-    for k, (s, lab) in enumerate((("0", r"$|0\rangle$"), ("1", r"$|1\rangle$"), ("+", r"$|{+}\rangle$"))):
+    # \left|...\right\rangle: a bare \rangle uses mathtext's oversized delimiter glyph, which sits too high.
+    kets = (("0", r"$\left|0\right\rangle$"), ("1", r"$\left|1\right\rangle$"), ("+", r"$\left|{+}\right\rangle$"))
+    for k, (s, lab) in enumerate(kets):
         y = y0 + 0.46 - 0.18 * k
         spin(ax, x0 + 0.12, y, s)
         ax.text(x0 + 0.22, y, lab, va="center", fontsize=7)
