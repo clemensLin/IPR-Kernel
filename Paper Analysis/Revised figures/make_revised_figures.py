@@ -396,13 +396,13 @@ def fig_thermal(out: Path, svm: dict) -> None:
 
 # ---------------------------------------------------------------- appendix figures
 def fig_tfim_grams(out: Path) -> None:
-    """TFIM raw and normalized IPR Gram matrices for three sizes."""
-    fig = new_figure(PAGE_W, 3.9)
-    size, gap, x0, y0 = 1.55, 0.14, 0.95, 0.38
+    """TFIM raw and normalized IPR Gram matrices for four sizes (same panel grid as the thermal L sweep)."""
+    fig = new_figure(PAGE_W, 3.35)
+    size, gap, x0, y0 = 1.3, 0.14, 0.62, 0.38
     for r, (normalize, name, cbl) in enumerate(((True, "normalized", r"$\tilde K_{\mathrm{IPR}}$"),
                                                (False, "raw", r"$K_{\mathrm{IPR}}$"))):
         im = None
-        for c, L in enumerate((10, 50, 90)):
+        for c, L in enumerate((10, 30, 50, 100)):
             ax = add_axes(fig, x0 + c * (size + gap), y0 + r * (size + 0.24), size, size)
             g = compute_ipr_gram_matrix("tfim1d", L, basis=("IPR X", "IPR Z"), normalize=normalize)
             im = gram_panel(ax, g["K"], g["x"])
@@ -419,7 +419,7 @@ def fig_tfim_grams(out: Path) -> None:
                     panel_label(ax, "(b)")
             else:
                 ax.set_yticklabels([])
-        colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.08, y0 + r * (size + 0.24), size, cbl)
+        colorbar(fig, im, x0 + 4 * size + 3 * gap + 0.08, y0 + r * (size + 0.24), size, cbl)
     save(fig, out, "tfim_grams_raw_normalized")
 
 
