@@ -30,8 +30,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import font_manager
-from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm
+from matplotlib.colors import LinearSegmentedColormap, Normalize, TwoSlopeNorm, to_rgb
 from matplotlib.lines import Line2D
+from matplotlib.patches import Arc, Circle, Ellipse, FancyBboxPatch, Polygon, Rectangle
+from matplotlib.ticker import MultipleLocator
 from sklearn.preprocessing import KernelCenterer
 
 HERE = Path(__file__).resolve().parent
@@ -162,6 +164,9 @@ def gram_panel(ax: plt.Axes, K: np.ndarray, x: np.ndarray, crit: float = 1.0):
                    norm=Normalize(0.0, 1.0), interpolation="nearest", aspect="auto", rasterized=True)
     ax.axvline(crit, color="0.15", lw=0.5, ls=":")
     ax.axhline(crit, color="0.15", lw=0.5, ls=":")
+    # Integer major ticks on both axes, matching every other control-parameter axis.
+    ax.xaxis.set_major_locator(MultipleLocator(1))
+    ax.yaxis.set_major_locator(MultipleLocator(1))
     ax.minorticks_on()
     return im
 
@@ -276,6 +281,7 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
 
     ipr_overlay(ax_a, "tfim1d", ("IPR X", "IPR Z"), legend_loc="lower left")
     ax_a.set_ylim(-33, 1.5)
+    ax_a.xaxis.set_major_locator(MultipleLocator(1))
 
     g = compute_ipr_gram_matrix("tfim1d", 10, basis=("IPR X", "IPR Z"), normalize=True)
     im = gram_panel(ax_b, g["K"], g["x"])
@@ -552,7 +558,7 @@ def fig_xxz_field(out: Path) -> None:
     ax.set_yticks(np.arange(-4, 5, 2))
     ax.minorticks_on()
     for x, y, text in ((-3.0, 0.0, "Ferromagnetic"), (0.0, -1.3, "Paramagnetic"), (3.6, 0.0, "Anti-\nferro-\nmagnetic")):
-        ax.text(x, y, text, ha="center", va="center", fontsize=7, fontweight="bold")
+        ax.text(x, y, text, ha="center", va="center", fontsize=7)
     handles = [Line2D([0], [0], color="#d62728", lw=0.8, label="IPR crossing"),
                Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
     ax.legend(handles=handles, loc="upper left", frameon=True, facecolor="white", edgecolor="none", framealpha=0.85)
@@ -566,15 +572,17 @@ def fig_xxz_field(out: Path) -> None:
 
 def fig_thermal_l_sweep(out: Path) -> None:
     """HS and IPR Gram matrices at beta=0.2 for increasing system size."""
-    fig = new_figure(PAGE_W, 3.15)
-    size, gap, x0, y0 = 1.3, 0.14, 0.62, 0.38
+    fig = new_figure(PAGE_W, 3.35)
+    size, gap, row_gap, x0, y0 = 1.3, 0.14, 0.24, 0.62, 0.38
     im = None
     for r, kind in enumerate(("ipr", "hs")):
         for c, L in enumerate((10, 30, 50, 100)):
-            ax = add_axes(fig, x0 + c * (size + gap), y0 + r * (size + 0.06), size, size)
+            ax = add_axes(fig, x0 + c * (size + gap), y0 + r * (size + row_gap), size, size)
             g = compute_thermal_gram_matrix(kind=kind, L=L, beta=0.2, source="raw", normalize=True)
             im = gram_panel(ax, g["K"], g["x"])
             inset_text(ax, rf"$L={L}$")
+            if c == 0:
+                panel_label(ax, "(a)" if kind == "hs" else "(b)")
             ax.set_xticks([0, 1, 2, 3, 4])
             ax.set_yticks([0, 1, 2, 3, 4])
             if r == 0:
@@ -585,7 +593,7 @@ def fig_thermal_l_sweep(out: Path) -> None:
                 ax.set_ylabel(f"{KERNEL_NAMES[kind]}\n" + r"$h_j$")
             else:
                 ax.set_yticklabels([])
-    colorbar(fig, im, x0 + 4 * size + 3 * gap + 0.08, y0, 2 * size + 0.06, r"$\tilde K(h_i,h_j)$")
+    colorbar(fig, im, x0 + 4 * size + 3 * gap + 0.08, y0, 2 * size + row_gap, r"$\tilde K(h_i,h_j)$")
     save(fig, out, "thermal_grams_L_sweep_beta0p2")
 
 
@@ -672,6 +680,7 @@ def fig_thermal_phase_diagram(out: Path) -> None:
         ax.minorticks_on()
         ax.set_xlabel(r"$h$")
         inset_text(ax, rf"$L={L}$", "upper right")
+        panel_label(ax, f"({'abc'[k]})")
         if k == 0:
             ax.set_ylabel(r"$\beta$")
         else:
@@ -711,6 +720,7 @@ def fig_analytical(out: Path) -> None:
         ax.set_ylim(-0.03, 1.05)
         ax.set_xlabel(r"$\beta$")
         inset_text(ax, rf"$L={L}$", "lower left")
+        panel_label(ax, f"({'abc'[k]})")
         line_axes(ax)
         if k == 0:
             ax.set_ylabel("Kernel value")
@@ -719,6 +729,201 @@ def fig_analytical(out: Path) -> None:
         if k == 2:
             ax.legend(loc="center left")
     save(fig, out, "analytical_kernels")
+
+
+# ---------------------------------------------------------------- schematic figures
+SPIN_COLORS = {"0": ORANGE, "1": "#7570b3", "+": GREEN}
+# Schematics set their math in Computer Modern, the font of the equations in the manuscript.
+SCHEMATIC_RC = {"mathtext.fontset": "cm"}
+
+
+def lighten(color: str, amount: float) -> tuple[float, float, float]:
+    """Blend a color with white; amount=0 keeps it, amount=1 gives white."""
+    r, g, b = to_rgb(color)
+    return (r + (1 - r) * amount, g + (1 - g) * amount, b + (1 - b) * amount)
+
+
+def canvas(fig: plt.Figure) -> plt.Axes:
+    """Full-figure axes whose data coordinates are inches, for drawing schematics."""
+    W, H = fig.get_size_inches()
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(0, W)
+    ax.set_ylim(0, H)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    return ax
+
+
+def arrow(ax: plt.Axes, start: tuple[float, float], end: tuple[float, float], lw: float = 0.8) -> None:
+    ax.annotate("", xy=end, xytext=start, arrowprops={"arrowstyle": "-|>", "lw": lw, "color": "black",
+                                                      "mutation_scale": 7, "shrinkA": 0, "shrinkB": 0})
+
+
+def spin(ax: plt.Axes, x: float, y: float, state: str, r: float = 0.05) -> None:
+    c = SPIN_COLORS[state]
+    ax.add_patch(Circle((x, y), r, fc=lighten(c, 0.35), ec=c, lw=0.6, zorder=3))
+
+
+def ring(ax: plt.Axes, center: tuple[float, float], radius: float, states: str, label: str = "") -> None:
+    ax.add_patch(Circle(center, radius, fill=False, ec="0.35", lw=0.6, zorder=2))
+    for k, s in enumerate(states):
+        a = np.deg2rad(90 - 360 * k / len(states))
+        spin(ax, center[0] + radius * np.cos(a), center[1] + radius * np.sin(a), s)
+    if label:
+        ax.text(*center, label, ha="center", va="center")
+
+
+def block_arrow(ax: plt.Axes, xy: tuple[float, float], angle: float, text: str, lw: float = 0.6,
+                ls: str = "-") -> None:
+    """Double-headed block arrow carrying a kernel value, drawn along `angle` (degrees)."""
+    ax.text(*xy, text, rotation=angle, rotation_mode="anchor", ha="center", va="center", fontsize=7, zorder=4,
+            bbox={"boxstyle": "darrow,pad=0.22", "fc": "white", "ec": "black", "lw": lw, "ls": ls})
+
+
+def fig_ising_example(out: Path) -> None:
+    """Spin configurations of the TFIM and the values the IPR and HS kernels assign to pairs of them."""
+    W, H = COL_W, 3.05
+    with plt.rc_context(SCHEMATIC_RC):
+        _draw_ising_example(out, W, H)
+
+
+def _draw_ising_example(out: Path, W: float, H: float) -> None:
+    fig = new_figure(W, H)
+    ax = canvas(fig)
+    ax.text(W / 2, H - 0.2, r"$H=-J\,\sum_i Z_iZ_{i+1}-h\,\sum_i X_i$", ha="center", va="center",
+            bbox={"boxstyle": "round,pad=0.35", "fc": "0.93", "ec": "0.45", "lw": 0.6})
+
+    radius, n = 0.44, 12
+    top, left, right = (W / 2, 2.05), (W / 2 - 0.9, 0.55), (W / 2 + 0.9, 0.55)
+    ring(ax, top, radius, "0000" + "1" + "0" * (n - 5))
+    ring(ax, left, radius, "0" * n, r"$h<J$")
+    ring(ax, right, radius, "+" * n, r"$h>J$")
+
+    def pair(a, b, offset, ipr_text, ipr_lw):
+        (xa, ya), (xb, yb) = a, b
+        d = np.hypot(xb - xa, yb - ya)
+        u = np.array([(xb - xa) / d, (yb - ya) / d])
+        nrm = np.array([-u[1], u[0]])
+        mid = np.array([(xa + xb) / 2, (ya + yb) / 2])
+        angle = np.degrees(np.arctan2(u[1], u[0]))
+        block_arrow(ax, mid + offset * nrm, angle, ipr_text, lw=ipr_lw)
+        block_arrow(ax, mid - offset * nrm, angle, r"$K_{\mathrm{HS}}\approx 0$", ls=":")
+
+    pair(left, top, 0.13, r"$K_{\mathrm{IPR}}\approx 1$", 1.4)
+    pair(top, right, 0.13, r"$K_{\mathrm{IPR}}\approx 0$", 0.6)
+    pair(left, right, 0.145, r"$K_{\mathrm{IPR}}\approx 0$", 0.6)
+
+    # Legend for the single-spin states.
+    x0, y0 = 0.12, 1.75
+    ax.add_patch(FancyBboxPatch((x0, y0), 0.5, 0.56, boxstyle="round,pad=0.02", fc="0.93", ec="0.45", lw=0.6))
+    for k, (s, lab) in enumerate((("0", r"$|0\rangle$"), ("1", r"$|1\rangle$"), ("+", r"$|{+}\rangle$"))):
+        y = y0 + 0.46 - 0.18 * k
+        spin(ax, x0 + 0.12, y, s)
+        ax.text(x0 + 0.22, y, lab, va="center", fontsize=7)
+    save(fig, out, "ising_example")
+
+
+def data_stack(ax: plt.Axes, x: float, y: float, w: float, n: int, slab: float, gap: float) -> float:
+    """Stack of slabs standing for a dataset of states, with an atom icon in the middle; returns its top."""
+    depth = np.array([0.05, 0.035])
+    mid = {n // 2 - 1, n // 2, n // 2 + 1}
+    for k in range(n):
+        yk = y + k * (slab + gap)
+        if k in mid:
+            continue
+        front = Rectangle((x, yk), w, slab, fc="0.18", ec=GREEN, lw=0.5)
+        side = Polygon([(x + w, yk), (x + w, yk + slab), (x + w + depth[0], yk + slab + depth[1]),
+                        (x + w + depth[0], yk + depth[1])], fc="0.35", ec=GREEN, lw=0.5)
+        topf = Polygon([(x, yk + slab), (x + w, yk + slab), (x + w + depth[0], yk + slab + depth[1]),
+                        (x + depth[0], yk + slab + depth[1])], fc="0.35", ec=GREEN, lw=0.5)
+        for p in (side, topf, front):
+            ax.add_patch(p)
+    y_mid = y + (n // 2 - 1) * (slab + gap)
+    h_mid = 3 * slab + 2 * gap
+    ax.add_patch(Rectangle((x, y_mid), w, h_mid, fc="0.94", ec=GREEN, lw=0.5))
+    cx, cy = x + w / 2, y_mid + h_mid / 2
+    for a in (0, 60, 120):
+        ax.add_patch(Ellipse((cx, cy), 0.32 * w * 2.2, 0.11, angle=a, fill=False, ec=ORANGE, lw=0.8))
+    ax.add_patch(Circle((cx, cy), 0.022, fc=ORANGE, ec="none"))
+    return y + n * (slab + gap)
+
+
+def circuit(ax: plt.Axes, x: float, yc: float, s: int) -> float:
+    """Measurement circuit in basis U_s; returns the x position where the output label ends."""
+    wires = (yc + 0.12, yc, yc - 0.12)
+    ax.text(x, yc, r"$\psi$", ha="right", va="center")
+    for y in wires:
+        ax.plot([x + 0.05, x + 0.72], [y, y], color="black", lw=0.6)
+    ax.add_patch(Rectangle((x + 0.17, yc - 0.17), 0.2, 0.34, fc="white", ec="black", lw=0.6, zorder=3))
+    ax.text(x + 0.27, yc, rf"$U_{s}$", ha="center", va="center", fontsize=7, zorder=4)
+    for y in wires:
+        mx = x + 0.5
+        ax.add_patch(Rectangle((mx - 0.07, y - 0.045), 0.14, 0.09, fc="white", ec="black", lw=0.5, zorder=3))
+        ax.add_patch(Arc((mx, y - 0.025), 0.09, 0.07, theta1=0, theta2=180, ec="black", lw=0.5, zorder=4))
+        ax.plot([mx, mx + 0.04], [y - 0.025, y + 0.035], color="black", lw=0.5, zorder=4)
+    ax.text(x + 0.77, yc, rf"$I^{{({s})}}(\psi)$", ha="left", va="center")
+    return x + 1.2
+
+
+def fig_scheme(out: Path) -> None:
+    """IPR-kernel pipeline: states, IPRs in several bases, feature vector, kernel, SVM."""
+    W, H = PAGE_W, 1.75
+    with plt.rc_context(SCHEMATIC_RC):
+        _draw_scheme(out, W, H)
+
+
+def _draw_scheme(out: Path, W: float, H: float) -> None:
+    fig = new_figure(W, H)
+    ax = canvas(fig)
+
+    top = data_stack(ax, 0.1, 0.18, 0.42, 15, 0.065, 0.017)
+    ax.text(0.33, top + 0.08, r"States $\psi$", ha="center", va="bottom")
+
+    rows = (1.4, 0.87, 0.34)
+    y_mid = rows[1]
+    ax.plot([0.6, 0.78], [y_mid, y_mid], color="black", lw=0.8)
+    ax.plot([0.78, 0.78], [rows[2], rows[0]], color="black", lw=0.8)
+    x_out = 0.0
+    for s, yc in enumerate(rows, start=1):
+        arrow(ax, (0.78, yc), (0.98, yc))
+        x_out = circuit(ax, 1.12, yc, s)
+    for yc in rows:
+        ax.plot([x_out - 0.05, x_out + 0.1], [yc, yc], color="black", lw=0.8)
+    ax.plot([x_out + 0.1, x_out + 0.1], [rows[2], rows[0]], color="black", lw=0.8)
+    arrow(ax, (x_out + 0.1, y_mid), (x_out + 0.3, y_mid))
+
+    x = x_out + 0.36
+    t = ax.text(x, y_mid, r"$\mathbf{I}(\psi)=\left(I^{(1)}(\psi),\,I^{(2)}(\psi),\,I^{(3)}(\psi)\right)$",
+                ha="left", va="center")
+    fig.canvas.draw()
+    x = ax.transData.inverted().transform(t.get_window_extent().get_points())[1, 0] + 0.06
+    arrow(ax, (x, y_mid), (x + 0.22, y_mid))
+    t = ax.text(x + 0.28, y_mid, r"$K_{\mathrm{IPR}}(\psi,\phi)$", ha="left", va="center")
+    fig.canvas.draw()
+    x = ax.transData.inverted().transform(t.get_window_extent().get_points())[1, 0] + 0.06
+    arrow(ax, (x, y_mid), (x + 0.22, y_mid))
+
+    # SVM panel: three classes separated by linear boundaries.
+    svm = add_axes(fig, x + 0.32, 0.2, W - x - 0.42, 1.25)
+    rng = np.random.default_rng(7)
+    r = np.sqrt(rng.uniform(0, 1, 700))
+    phi = rng.uniform(0, 2 * np.pi, 700)
+    px, py = r * np.cos(phi), r * np.sin(phi)
+    edges = np.deg2rad([100.0, -20.0, -140.0])
+    sector = np.digitize(np.mod(phi - edges[2], 2 * np.pi), np.sort(np.mod(edges - edges[2], 2 * np.pi)))
+    for k, c in enumerate((GREEN, "0.2", ORANGE)):
+        m = sector == k + 1
+        svm.scatter(px[m], py[m], s=0.8, color=c, linewidths=0)
+    for e in edges:
+        svm.plot([0, 1.15 * np.cos(e)], [0, 1.15 * np.sin(e)], color="black", lw=0.6)
+    svm.set_xlim(-1.25, 1.35)
+    svm.set_ylim(-1.25, 1.25)
+    svm.set_xticks([])
+    svm.set_yticks([])
+    for side in ("top", "right"):
+        svm.spines[side].set_visible(False)
+    svm.set_title("SVM", pad=3)
+    save(fig, out, "scheme")
 
 
 def main() -> None:
@@ -743,6 +948,8 @@ def main() -> None:
         "fig_thermal_decision": lambda: fig_thermal_decision(args.out_dir, load_thermal_svm(args.thermal_svm)),
         "fig_thermal_phase_diagram": lambda: fig_thermal_phase_diagram(args.out_dir),
         "fig_analytical": lambda: fig_analytical(args.out_dir),
+        "fig_scheme": lambda: fig_scheme(args.out_dir),
+        "fig_ising_example": lambda: fig_ising_example(args.out_dir),
     }
     for name, job in jobs.items():
         if args.only is None or name in args.only:
