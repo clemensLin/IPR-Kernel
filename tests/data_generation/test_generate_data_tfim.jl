@@ -190,18 +190,13 @@ const PARAMS = Dict{String,Any}(
     end
 
     @testset "grid selection matches the committed folders" begin
-        raw = joinpath(@__DIR__, "..", "..", "Data", "Raw", "Data TFIM")
-        for (geometry, subdir, sizes) in [("1d", "Data TFIM 1D", SIZES_1D),
-                                          ("2d", "Data TFIM 2D", SIZES_2D)]
-            for L in sizes
-                folder = joinpath(raw, subdir,
-                                  geometry == "1d" ? "L=$(L)x1" : "L=$(L)x$(L)")
-                isdir(folder) || continue
-                n_h = countlines(joinpath(folder, "hs.csv"))
-                @test length(h_grid_for(geometry, L)) == n_h
-                has_angles = isfile(joinpath(folder, "new_iprs.csv"))
-                @test (angles_for(geometry, L) !== nothing) == has_angles
-            end
+        # Only the 1D data used in the paper is committed.
+        raw = joinpath(@__DIR__, "..", "..", "data", "raw", "tfim_1d")
+        for L in SIZES_1D
+            folder = joinpath(raw, "L=$(L)x1")
+            isdir(folder) || continue
+            n_h = countlines(joinpath(folder, "hs.csv"))
+            @test length(h_grid_for("1d", L)) == n_h
         end
     end
 end

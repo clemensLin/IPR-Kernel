@@ -12,8 +12,8 @@ XXZ chain, diagonalized exactly. Six things are checked:
 5. The Fourier operator reproduces the exact spectrum in *every* particle-number
    sector, not only at half filling. This is what fixes the momentum offset to the
    fermion-number parity.
-6. ``all_correlations`` is ``4 <Z_0 Z_{L/2}>``, and the generator reproduces the
-   committed data.
+6. ``all_correlations`` is ``4 <Z_0 Z_{L/2}>`` (written by the generator, not committed),
+   and the generator reproduces the committed IPRs and energies.
 
 Runs standalone or under pytest.
 """
@@ -31,7 +31,7 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "data_generation" / "generate_data_heisenberg.py"
-COMMITTED = REPO_ROOT / "Data" / "Raw" / "Data Heisenberg"
+COMMITTED = REPO_ROOT / "data" / "raw" / "xxz"
 
 
 def _load_generator():
@@ -251,7 +251,6 @@ def test_matches_committed_data(L: int = 6) -> None:
     columns = {
         "energies_old.csv": "energy_z", "energies_new.csv": "energy_xy",
         "IPR Z.csv": "ipr_z", "IPR X.csv": "ipr_x", "IPR XY.csv": "ipr_xy",
-        "all_correlations.csv": "correlation",
     }
     committed = {name: read(name) for name in columns}
 
@@ -266,15 +265,12 @@ def test_matches_committed_data(L: int = 6) -> None:
         fourier = gen.build_heisenberg_fourier_operator(L, J=1.0, delta=float(grid[k]), h=0.0)
         energy_xy, state_xy = gen.robust_lanczos_ed(fourier, k=1, compute_eigenvectors=True)
 
-        operator = kron_op(L, {0: Z, L // 2: Z})
         values = {
             "energies_old.csv": float(np.ravel(energy)[0]),
             "energies_new.csv": float(np.ravel(energy_xy)[0]),
             "IPR Z.csv": ipr(state),
             "IPR X.csv": ipr(hadamard_rotate(state, L)),
             "IPR XY.csv": ipr(np.asarray(state_xy).flatten()),
-            "all_correlations.csv": gen.CORRELATION_WEIGHT
-            * float(np.real(state.conj() @ (operator @ state))),
         }
         diffs = [abs(values[n] - committed[n][k]) for n in columns]
         print(f"      {grid[k]:6.1f} " + " ".join(f"{d:11.2e}" for d in diffs))

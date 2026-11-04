@@ -1,4 +1,4 @@
-# Generates Data/Raw/Data TFIM Thermal/Data HS Kernel/HS Kernel L=<L>.csv
+# Generates data/raw/tfim_thermal/hs/HS Kernel L=<L>.csv
 #
 # Hilbert-Schmidt (fidelity) kernel between Gibbs states of the periodic
 # transverse-field Ising chain
@@ -252,7 +252,7 @@ function main(argv::Vector{String}=String[])
     end
 
     repo_root = dirname(@__DIR__)
-    default_dir = joinpath(repo_root, "Data", "Raw", "Data TFIM Thermal", "Data HS Kernel")
+    default_dir = joinpath(repo_root, "data", "raw", "tfim_thermal", "hs")
     output_dir = opts["outdir"] === nothing ? default_dir : String(opts["outdir"])
 
     for L in opts["sizes"]

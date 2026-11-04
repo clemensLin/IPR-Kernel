@@ -27,8 +27,7 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "data_generation" / "generate_data_heisenberg_field.py"
-COMMITTED_CSV = (REPO_ROOT / "Data" / "Raw" / "Data Heisenberg" / "L=14_with_field"
-                 / "ipr_field_sweep_L=14.csv")
+COMMITTED_CSV = REPO_ROOT / "data" / "raw" / "xxz_field" / "L=14" / "ipr_field_sweep_L=14.csv"
 
 
 def _load_generator():

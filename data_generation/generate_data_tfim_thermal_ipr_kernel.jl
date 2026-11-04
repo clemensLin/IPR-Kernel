@@ -1,4 +1,4 @@
-# Generates Data/Raw/Data TFIM Thermal/Data IPR Kernel/ipr_thermal_L=<L>.csv
+# Generates data/raw/tfim_thermal/ipr/ipr_thermal_L=<L>.csv
 #
 # Gibbs states of the periodic transverse-field Ising chain
 #
@@ -266,7 +266,7 @@ function main(argv::Vector{String}=String[])
     Random.seed!(opts["seed"])
 
     repo_root = dirname(@__DIR__)
-    default_dir = joinpath(repo_root, "Data", "Raw", "Data TFIM Thermal", "Data IPR Kernel")
+    default_dir = joinpath(repo_root, "data", "raw", "tfim_thermal", "ipr")
     output_dir = opts["outdir"] === nothing ? default_dir : String(opts["outdir"])
 
     for N in opts["sizes"]

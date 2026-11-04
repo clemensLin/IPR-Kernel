@@ -1,4 +1,4 @@
-# Generates Data/Raw/Data TFIM/Data TFIM {1D,2D}/L=<Lx>x<Ly>/
+# Generates data/raw/tfim_{1d,2d}/L=<Lx>x<Ly>/ (only the 1D data is used in the paper)
 #
 # Ground states of the transverse-field Ising model on a periodic chain (Ly = 1)
 # or a periodic square lattice (Ly = Lx),
@@ -303,7 +303,7 @@ function main(argv::Vector{String}=String[])
     Random.seed!(opts["seed"])
 
     repo_root = dirname(@__DIR__)
-    default_root = joinpath(repo_root, "Data", "Raw", "Data TFIM")
+    default_root = joinpath(repo_root, "data", "raw")
     root = opts["outdir"] === nothing ? default_root : String(opts["outdir"])
 
     parameters = Dict{String,Any}(
@@ -319,7 +319,7 @@ function main(argv::Vector{String}=String[])
     for geometry in geometries
         default_sizes = geometry == "1d" ? SIZES_1D : SIZES_2D
         sizes = opts["sizes"] === nothing ? default_sizes : opts["sizes"]
-        subdir = joinpath(root, geometry == "1d" ? "Data TFIM 1D" : "Data TFIM 2D")
+        subdir = joinpath(root, geometry == "1d" ? "tfim_1d" : "tfim_2d")
 
         for L in sizes
             Lx, Ly = geometry == "1d" ? (L, 1) : (L, L)

@@ -146,8 +146,8 @@ const N_TEST = 8
     end
 
     @testset "grid matches the committed files" begin
-        path = joinpath(@__DIR__, "..", "..", "Data", "Raw", "Data TFIM Thermal",
-                        "Data IPR Kernel", "ipr_thermal_L=10.csv")
+        path = joinpath(@__DIR__, "..", "..", "data", "raw", "tfim_thermal", "ipr",
+                        "ipr_thermal_L=10.csv")
         if isfile(path)
             rows = countlines(path) - 1
             @test rows == length(H_VALS) * length(BETA_VALS)

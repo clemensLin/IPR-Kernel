@@ -1,14 +1,11 @@
-# For notebooks
-numpy
-pandas
-matplotlib
-scipy
-scikit-learn
+# Analysis package (src/ipr_kernel) and its dependencies
+-e .
+
+# Notebooks
 jupyter
 ipykernel
 
-# For data generation
+# Data generation (Python side; the Julia side is pinned in Project.toml/Manifest.toml)
 netket
 jax
-seaborn
 tqdm

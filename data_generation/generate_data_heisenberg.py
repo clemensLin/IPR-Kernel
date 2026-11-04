@@ -1,4 +1,4 @@
-"""Generates Data/Raw/Data Heisenberg/L=<L>/
+"""Generates data/raw/xxz/L=<L>/
 
 Exact diagonalization of the periodic spin-1/2 XXZ chain
 
@@ -67,7 +67,7 @@ from tqdm import tqdm
 
 # Parameters reproducing the committed raw data.
 SIZES = list(range(6, 26, 2))
-# linspace, not arange: this is the exact grid Data/Data_Processing.ipynb assumes
+# linspace, not arange: this is the exact grid notebooks/process_data.ipynb assumes
 # as `source_delta` when it interpolates these columns.
 DELTA_ARRAY = np.linspace(0.0, 5.0, 51)
 FIELD = 0.0
@@ -281,7 +281,7 @@ def main() -> None:
     parser.add_argument("--field", type=float, default=FIELD,
                         help="longitudinal field h (default 0.0, as committed)")
     parser.add_argument("--outdir", type=Path,
-                        default=repo_root / "Data" / "Raw" / "Data Heisenberg")
+                        default=repo_root / "data" / "raw" / "xxz")
     args = parser.parse_args()
 
     for L in args.sizes:

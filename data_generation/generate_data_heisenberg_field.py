@@ -1,4 +1,4 @@
-"""Generates Data/Raw/Data Heisenberg/L=<L>_with_field/
+"""Generates data/raw/xxz_field/L=<L>/
 
 Exact diagonalization of the periodic spin-1/2 XXZ chain in a longitudinal field
 on a two-dimensional (Delta, h) grid,
@@ -324,7 +324,7 @@ def main() -> None:
     parser.add_argument("--grid-min", type=float, default=GRID_MIN)
     parser.add_argument("--grid-max", type=float, default=GRID_MAX)
     parser.add_argument("--outdir", type=Path,
-                        default=repo_root / "Data" / "Raw" / "Data Heisenberg")
+                        default=repo_root / "data" / "raw" / "xxz_field")
     parser.add_argument("--check-only", action="store_true",
                         help="report basis-energy agreement without writing any files")
     args = parser.parse_args()
@@ -354,7 +354,7 @@ def main() -> None:
         if args.check_only:
             continue
 
-        folder = args.outdir / f"L={L}_with_field"
+        folder = args.outdir / f"L={L}"
         paths = write_outputs(L, delta_array, h_array, results, folder)
         print(f"  wrote {', '.join(path.name for path in paths)} in {folder}")
 
