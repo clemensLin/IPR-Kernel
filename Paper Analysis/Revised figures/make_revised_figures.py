@@ -855,7 +855,8 @@ def fig_ising_example(out: Path) -> None:
     for k, (s, lab) in enumerate(kets):
         y = y0 + 0.46 - 0.18 * k
         spin(ax, x0 + 0.12, y, s)
-        ax.text(x0 + 0.22, y, lab, va="center", fontsize=7)
+        # The mathtext bbox has extra depth below the glyphs, so va="center" leaves the ket ~0.0125 in high.
+        ax.text(x0 + 0.22, y - 0.0125, lab, va="center", fontsize=7)
     save(fig, out, "ising_example")
 
 
