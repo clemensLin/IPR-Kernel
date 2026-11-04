@@ -60,9 +60,6 @@ PAGE_W = 7.0
 GREEN = "#1b9e77"
 ORANGE = "#d95f02"
 LIGHT_BLUE = "#56b4e9"
-# Contour colour that stays distinct from every Fig. 5 background, and clearly from black, under the common
-# colour-vision deficiencies.
-VIOLET = "#6900f0"
 KERNEL_COLORS = {"ipr": GREEN, "hs": ORANGE}
 KERNEL_NAMES = {"ipr": "IPR", "hs": "HS"}
 BASIS_COLORS = {"IPR X": GREEN, "IPR XY": GREEN, "IPR Z": ORANGE}
@@ -560,7 +557,7 @@ def fig_xxz_field(out: Path) -> None:
     mask = np.kron(xy_local, np.ones((fine, fine)))
     xs = np.linspace(edges_d[0], edges_d[-1], mask.shape[1] + 1)
     ys = np.linspace(edges_h[0], edges_h[-1], mask.shape[0] + 1)
-    ax.contour(0.5 * (xs[1:] + xs[:-1]), 0.5 * (ys[1:] + ys[:-1]), mask, levels=[0.5], colors=VIOLET,
+    ax.contour(0.5 * (xs[1:] + xs[:-1]), 0.5 * (ys[1:] + ys[:-1]), mask, levels=[0.5], colors=LIGHT_BLUE,
                linewidths=0.8)
 
     d_sat = np.linspace(-1.0, 1.5, 200)
@@ -577,7 +574,7 @@ def fig_xxz_field(out: Path) -> None:
     ax.minorticks_on()
     for x, y, text in ((-3.0, 0.0, "FM"), (0.2, 0.0, "XY"), (3.6, 0.0, "AFM")):
         ax.text(x, y, text, ha="center", va="center")
-    handles = [Line2D([0], [0], color=VIOLET, lw=0.8, label="IPR crossing"),
+    handles = [Line2D([0], [0], color=LIGHT_BLUE, lw=0.8, label="IPR crossing"),
                Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
     ax.legend(handles=handles, loc="upper left")
     cax = add_axes(fig, 2.8, 0.38, 0.07, 2.3)
