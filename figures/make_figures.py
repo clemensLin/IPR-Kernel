@@ -225,6 +225,16 @@ def ipr_overlay(ax: plt.Axes, dataset: str, basis: tuple[str, str], legend_loc: 
     ax.legend(handles=handles, loc=legend_loc, ncol=2)
 
 
+def low_ipr_window(dataset: str, basis: tuple[str, str], L: int, log10_min: float) -> tuple[float, float] | None:
+    """Parameter range in which the IPRs in both bases lie below 10**log10_min, or None if there is none."""
+    cfg = DATASETS[dataset]
+    folder = cfg["processed"] / folder_name(dataset, L)
+    x = read_vector(folder / cfg["x_file"])
+    ys = [read_curve(folder, cfg, c, "log10") for c in curves_from_basis(dataset, basis)]
+    inside = np.all([y < log10_min for y in ys], axis=0)
+    return (float(x[inside].min()), float(x[inside].max())) if inside.any() else None
+
+
 def load_thermal_svm(path: Path) -> dict:
     if path.exists():
         return pickle.load(open(path, "rb"))
@@ -278,6 +288,10 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     ax_d = add_axes(fig, 3.9, 0.38, 3.05, 1.5)
 
     ipr_overlay(ax_a, "tfim1d", ("IPR X", "IPR Z"), legend_loc="lower left")
+    window = low_ipr_window("tfim1d", ("IPR X", "IPR Z"), 100, -2.0)
+    if window is not None:
+        ax_a.axvspan(*window, color="0.88", lw=0, zorder=-1)
+        ax_a.axhline(-2.0, color="0.35", lw=0.6, ls=(0, (1, 1.5)), zorder=0)
     ax_a.set_ylim(-33, 1.5)
     ax_a.xaxis.set_major_locator(MultipleLocator(1))
 
