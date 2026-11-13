@@ -279,13 +279,13 @@ def ba_by_beta(result: dict, kind: str, split: str) -> tuple[np.ndarray, np.ndar
 # ---------------------------------------------------------------- main-text figures
 def fig_tfim(out: Path, svm_tables: dict) -> None:
     """TFIM: IPR crossings, 2x2 Gram matrices, global and local balanced accuracy (top row as in fig_heisenberg)."""
-    size, gap = 0.95, 0.14
+    size, gap = GRID_SIZE, GRID_GAP
     grid_h = 2 * size + gap
-    y_top = 2.45
+    y_top = 2.05
     fig = new_figure(PAGE_W, y_top + grid_h + 0.15)
     ax_a = add_axes(fig, 0.45, y_top, 3.05, grid_h)
-    ax_c = add_axes(fig, 0.45, 0.38, 3.05, 1.5)
-    ax_d = add_axes(fig, 3.9, 0.38, 3.05, 1.5)
+    ax_c = add_axes(fig, 0.45, 0.38, 3.05, 1.1)
+    ax_d = add_axes(fig, 3.9, 0.38, 3.05, 1.1)
 
     ipr_overlay(ax_a, "tfim1d", ("IPR X", "IPR Z"), legend_loc="lower left")
     window = low_ipr_window("tfim1d", ("IPR X", "IPR Z"), 100, -2.0)
@@ -295,7 +295,7 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
     ax_a.set_ylim(-33, 1.5)
     ax_a.xaxis.set_major_locator(MultipleLocator(1))
 
-    x0 = 4.3
+    x0 = GRID_X0
     grid_axes, im = gram_grid(fig, x0, y_top, size, gap, "tfim1d", ("IPR X", "IPR Z"))
     ax_b = grid_axes[0]
     colorbar(fig, im, x0 + 2 * size + gap + 0.07, y_top, grid_h, r"$\tilde K_{\mathrm{IPR}}(h_i,h_j)$")
@@ -320,7 +320,7 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
         line_axes(ax)
     ax_c.set_ylabel("Balanced accuracy")
     ax_d.set_yticklabels([])
-    ax_d.legend(loc="center right", ncol=1)
+    ax_d.legend(loc="center right", ncol=2, columnspacing=0.8)
 
     for ax, lab in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
         panel_label(ax, f"({lab})")
@@ -328,6 +328,8 @@ def fig_tfim(out: Path, svm_tables: dict) -> None:
 
 
 GRID_L = {"tfim1d": (10, 30, 50, 100), "heisenberg": (6, 12, 18, 24)}
+# 2x2 Gram grid shared by the TFIM and XXZ main-text figures (inches).
+GRID_SIZE, GRID_GAP, GRID_X0 = 0.75, 0.12, 4.55
 GRID_SYMBOL = {"tfim1d": "h", "heisenberg": r"\Delta"}
 
 
@@ -356,14 +358,14 @@ def gram_grid(fig: plt.Figure, x0: float, y0: float, size: float, gap: float, da
 
 def fig_heisenberg(out: Path) -> None:
     """Heisenberg: XY/Z IPR crossings and a 2x2 grid of Gram matrices."""
-    size, gap, y0 = 0.95, 0.14, 0.38
+    size, gap, y0 = GRID_SIZE, GRID_GAP, 0.38
     grid_h = 2 * size + gap
     fig = new_figure(PAGE_W, grid_h + 0.5)
-    ax_a = add_axes(fig, 0.45, y0, 3.2, grid_h)
+    ax_a = add_axes(fig, 0.45, y0, 3.05, grid_h)
     ipr_overlay(ax_a, "heisenberg", ("IPR XY", "IPR Z"), legend_loc="lower right")
     ax_a.set_ylim(-5.4, 0.3)
 
-    x0 = 4.3
+    x0 = GRID_X0
     axes, im = gram_grid(fig, x0, y0, size, gap, "heisenberg", ("IPR XY", "IPR Z"))
     colorbar(fig, im, x0 + 2 * size + gap + 0.07, y0, grid_h, r"$\tilde K_{\mathrm{IPR}}(\Delta_i,\Delta_j)$")
     panel_label(ax_a, "(a)")
@@ -373,8 +375,8 @@ def fig_heisenberg(out: Path) -> None:
 
 def fig_thermal(out: Path, svm: dict) -> None:
     """Thermal TFIM: Gram matrices at L=100, centered KTA, and local balanced accuracy."""
-    fig = new_figure(PAGE_W, 3.0)
-    size, gap, x0, y0 = 1.1, 0.14, 0.62, 0.38
+    fig = new_figure(PAGE_W, 2.5)
+    size, gap, x0, y0 = 0.85, 0.12, 0.62, 0.38
     betas = (0.1, 0.2, 2.0)
     im = None
     gram_axes = {}
@@ -398,7 +400,7 @@ def fig_thermal(out: Path, svm: dict) -> None:
     colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.07, y0, 2 * size + 0.06, r"$\tilde K(h_i,h_j)$")
 
     # Right column spans exactly the Gram block, so letters (a) and (b) share their height.
-    xr, wr, vgap = 5.12, 1.82, 0.22
+    xr, wr, vgap = 4.55, 2.4, 0.22
     top = y0 + 2 * size + 0.06
     hr = (top - y0 - vgap) / 2
     ax_k = add_axes(fig, xr, top - hr, wr, hr)
@@ -418,6 +420,8 @@ def fig_thermal(out: Path, svm: dict) -> None:
     ax_l.set_ylabel("Local BA")
     ax_l.set_xlabel(r"$\beta$")
     ax_k.set_xlim(2.05, 0.0)
+    # Room below the curves for the legend, which would otherwise cover the HS data in the shorter panel.
+    ax_l.set_ylim(0.5, 1.02)
     ax_k.tick_params(labelbottom=False)
     for ax in (ax_k, ax_l):
         line_axes(ax)
@@ -560,8 +564,8 @@ def fig_xxz_field(out: Path) -> None:
         (0.0, "#FFF2E8"), (0.6 * t, "#F4A261"), (0.8 * t, ORANGE), (t, matplotlib.colors.to_hex(mid)),
         (t + 0.3 * (1 - t), GREEN), (1.0, GREEN)], N=512)
 
-    fig = new_figure(COL_W, 2.75)
-    ax = add_axes(fig, 0.42, 0.38, 2.3, 2.3)
+    fig = new_figure(COL_W, 2.5)
+    ax = add_axes(fig, 0.42, 0.38, 2.05, 2.05)
     im = ax.pcolormesh(edges_d, edges_h, ratio, cmap=cmap, vmin=np.nanmin(ratio), vmax=np.nanmax(ratio),
                        shading="flat", rasterized=True)
 
@@ -591,7 +595,7 @@ def fig_xxz_field(out: Path) -> None:
     handles = [Line2D([0], [0], color=LIGHT_BLUE, lw=0.8, label="IPR crossing"),
                Line2D([0], [0], color="black", lw=0.8, ls="--", label="Bethe ansatz")]
     ax.legend(handles=handles, loc="upper left")
-    cax = add_axes(fig, 2.8, 0.38, 0.07, 2.3)
+    cax = add_axes(fig, 2.55, 0.38, 0.07, 2.05)
     cb = fig.colorbar(im, cax=cax)
     cb.ax.tick_params(length=2.0, width=0.5)
     cb.outline.set_linewidth(0.5)
