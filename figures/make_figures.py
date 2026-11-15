@@ -385,6 +385,9 @@ def fig_thermal(out: Path, svm: dict) -> None:
             ax = add_axes(fig, x0 + c * (size + gap), y0 + r * (size + 0.06), size, size)
             g = compute_thermal_gram_matrix(kind=kind, L=100, beta=beta, source="processed", normalize=True)
             im = gram_panel(ax, g["K"], g["x"])
+            if beta == 0.2:
+                # Matrix element (h_i, h_j) = (3.5, 1.2) discussed in the main text.
+                ax.plot(3.5, 1.2, marker="o", ms=4, mfc="none", mec="black", mew=0.7)
             inset_text(ax, rf"$\beta={beta:g}$")
             ax.set_xticks([0, 1, 2, 3, 4])
             ax.set_yticks([0, 1, 2, 3, 4])
