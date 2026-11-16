@@ -358,7 +358,7 @@ def gram_grid(fig: plt.Figure, x0: float, y0: float, size: float, gap: float, da
 
 def fig_heisenberg(out: Path) -> None:
     """Heisenberg: XY/Z IPR crossings and a 2x2 grid of Gram matrices."""
-    size, gap, y0 = GRID_SIZE, GRID_GAP, 0.38
+    size, gap, y0 = 0.85, GRID_GAP, 0.38
     grid_h = 2 * size + gap
     fig = new_figure(PAGE_W, grid_h + 0.5)
     ax_a = add_axes(fig, 0.45, y0, 3.05, grid_h)
@@ -375,8 +375,8 @@ def fig_heisenberg(out: Path) -> None:
 
 def fig_thermal(out: Path, svm: dict) -> None:
     """Thermal TFIM: Gram matrices at L=100, centered KTA, and local balanced accuracy."""
-    fig = new_figure(PAGE_W, 2.5)
-    size, gap, x0, y0 = 0.85, 0.12, 0.62, 0.38
+    fig = new_figure(PAGE_W, 2.7)
+    size, gap, x0, y0 = 0.95, 0.12, 0.62, 0.38
     betas = (0.1, 0.2, 2.0)
     im = None
     gram_axes = {}
@@ -403,7 +403,7 @@ def fig_thermal(out: Path, svm: dict) -> None:
     colorbar(fig, im, x0 + 3 * size + 2 * gap + 0.07, y0, 2 * size + 0.06, r"$\tilde K(h_i,h_j)$")
 
     # Right column spans exactly the Gram block, so letters (a) and (b) share their height.
-    xr, wr, vgap = 4.55, 2.4, 0.22
+    xr, wr, vgap = 4.75, 2.2, 0.14
     top = y0 + 2 * size + 0.06
     hr = (top - y0 - vgap) / 2
     ax_k = add_axes(fig, xr, top - hr, wr, hr)
@@ -424,7 +424,7 @@ def fig_thermal(out: Path, svm: dict) -> None:
     ax_l.set_xlabel(r"$\beta$")
     ax_k.set_xlim(2.05, 0.0)
     # Room below the curves for the legend, which would otherwise cover the HS data in the shorter panel.
-    ax_l.set_ylim(0.5, 1.02)
+    ax_l.set_ylim(0.6, 1.02)
     ax_k.tick_params(labelbottom=False)
     for ax in (ax_k, ax_l):
         line_axes(ax)
